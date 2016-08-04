@@ -1,0 +1,445 @@
+<html>
+<head> 
+<style>
+	#Formulario td
+{
+	padding: 5px;
+}
+</style>
+<script src="js/Help.js"></script>
+
+<script>
+var Formularios = new Array();
+$(document).ready(function(e) {
+	var Formulario = new Array();
+	Organismos_Disponibles();
+	Genomas_Disponibles();
+	Librerias_Disponibles();
+});
+function Enviar_Consuta()
+{
+	var Vistas = new Array();
+	var Operaciones = new Array(); 
+	var indice;
+	if($("#Contenedor_Vistas .Vista").length < 1)
+	{
+		alert("Please add a view");
+	} 
+	else
+	{
+		//Para cada formulario
+		$("#Contenedor_Vistas .Vista").each(function(index, element)
+		{
+			indice = $(element).attr('indice');
+			//Verificar que el primer elemento no tiene operación anexa "select"
+			if($(".Vista").first().attr('indice') != indice)
+			{
+				Operaciones[indice] = $("#Select_Operacion"+indice).val();
+			}
+			Vistas[indice] = Formularios[indice];
+		}).promise().done(function()
+		{
+				bootbox.dialog({
+				  message: '<form id="SubForm"><label class="control-label">Name of query: </label><br><input type="text" required style="width:250px;" class="form-control" id="Nombre"><br><label class="control-label">Description: </label><br><textarea class="form-control required" placement="top" id="Descripcion" name="Descripcion" required></textarea></form>',
+				  title: "Please give the information",
+				  buttons: {
+					success: {
+					  label: "Send",
+					  className: "btn-success",
+					  callback: function() {
+						  Validar_Formulario('SubForm');
+								 if($("#SubForm").valid())
+								 {
+																//Enviar información
+											$.post("./PHP/Consulta_Server.php",
+											{
+												Origen:"Realizar_Consulta",
+												Vistas : Vistas,
+												Operaciones : Operaciones,
+												txt_Nombre : $("#Nombre").val(),
+												txt_Descripcion : $("#Descripcion").val()
+
+											},function(data)
+											{
+												Dialogo_Instrucciones();
+												
+											});
+								 }
+										else
+										return false;
+				
+					  }
+					},
+					danger: {
+					  label: "Cancel",
+					  className: "btn-danger"
+					}
+				  }
+				});
+	
+		});
+	}
+}
+function Agregar_Vista()
+{
+	
+	var Formulario = $("#Formulario").serializeArray();
+	Formulario = Opciones_Adicionales(Formulario);
+	var cont=0;
+	$.each(Formulario, function(i, field){
+		if(field.value)
+			cont++;
+	});
+	
+	if(cont <= 0)
+	{
+			alert("Please configurate a field");
+	}else
+	{
+		$("#Contenedor_Vistas").append(Elemento(Formularios.length));
+		Formularios.push(Formulario);
+		$("#btn_Actualizar").fadeOut();	
+		Limpiar_Formulario();
+	}
+}
+function Opciones_Adicionales(Formulario)
+{
+		for(var item in Formulario)
+		{
+		  if(Formulario[item].name == 'Numero_Moleculas' && $("#Numero_Moleculas").val() ) 
+		  {
+			Formulario[item].value = $("#Operacion_Numero_Moleculas").val()+" "+$("#Numero_Moleculas").val();
+		  }
+		}
+		return Formulario;
+}
+	
+function Limpiar_Formulario()
+{
+		$("#Formulario * :text").val("");
+	$("#Formulario * select").prop('selectedIndex', 0);   
+
+}
+function Acomodar_Elementos(Elemento)
+{
+	var indice = $(Elemento).parent().parent()	.attr("indice");
+	
+	//borrar el elemento
+	$(Elemento).parent().parent().remove();
+	$("#Operacion"+indice).remove();
+	
+	//borrar la operación del primer elemento "select"
+	 indice = $(".Vista").first().attr('indice');
+	 $("#Operacion"+indice).remove();
+}
+function Elemento(indice)
+{
+	var Elemento="";
+	if($("#Contenedor_Vistas .Vista").length >= 1)
+	{
+		Elemento+='<td id="Operacion'+indice+'">';				
+					Elemento+= '	<select id="Select_Operacion'+indice+'" class="form-control" style="color:black;"><option value = "AND" >AND</option><option value="OR">OR</option><option value="INTERSECTION">READS INTERSECTION</option><option value="UNION">READS UNION</option></select>       ';
+		Elemento+='</td>';
+		Elemento+='<td indice="'+indice+'" class="Vista">';
+			Elemento+= '	<div >       ';
+
+			Elemento+= '       <button type="button" onclick="Acomodar_Elementos(this)" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>';
+			Elemento+='			<div class="panel panel-green">';
+			Elemento+='					<div class="panel-heading">';
+			Elemento+='							<div class="row">';
+			Elemento+='								<div class="col-xs-9 text-right">';
+			Elemento+='									<div class="huge">View '+(indice +1 )+'</div>';
+			Elemento+='								</div>';
+			Elemento+='							</div>';
+			Elemento+='						</div>';
+			Elemento+='						<a href="#">';
+			Elemento+='							<div class="panel-footer" onclick="Actualizar(\''+indice+'\')">';
+			Elemento+='								<span class="pull-left">Update</span>';
+			Elemento+='								<span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>';
+			Elemento+='								<div class="clearfix"></div>';
+			Elemento+='							</div>';
+			Elemento+='						</a>';
+			Elemento+='					</div>';
+			Elemento+='				</div>';
+
+	
+		Elemento+='</td>';
+
+	}
+else
+{
+		Elemento+='<td indice="'+indice+'" class="Vista">';
+
+	Elemento+= '	<div  >       ';
+
+	Elemento+= '       <button type="button" onclick="Acomodar_Elementos(this)" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>';
+	Elemento+='			<div class="panel panel-green">';
+	Elemento+='					<div class="panel-heading">';
+	Elemento+='							<div class="row">';
+
+	Elemento+='								<div class="col-xs-9 text-right">';
+	Elemento+='									<div class="huge">View '+(indice +1 )+'</div>';
+	Elemento+='								</div>';
+	Elemento+='							</div>';
+	Elemento+='						</div>';
+	Elemento+='						<a href="#">';
+	Elemento+='							<div class="panel-footer" onclick="Actualizar(\''+indice+'\')">';
+	Elemento+='								<span class="pull-left">Update</span>';
+	Elemento+='								<span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>';
+	Elemento+='								<div class="clearfix"></div>';
+	Elemento+='							</div>';
+	Elemento+='						</a>';
+	Elemento+='					</div>';
+	Elemento+='				</div>';
+			Elemento+='</td>';
+
+}
+return Elemento;
+}
+function Actualizar(indice)
+{
+	$.each(Formularios[indice], function(i, field){
+		if(field.name == "Numero_Moleculas")
+		{
+			var elements = field.value.split(" ");
+			if(elements[0])
+			{
+				$("#Operacion_Numero_Moleculas").val(elements[0]);
+				$("#Numero_Moleculas").val(elements[1]);
+			}else
+			{
+				$("#Operacion_Numero_Moleculas").val("=");
+				$("#Numero_Moleculas").val("");
+			}
+			
+		}
+		else
+		$("#"+field.name).val(field.value);
+		
+	});
+	$("#btn_Actualizar").attr('indice', indice);
+	$("#btn_Actualizar").fadeIn();
+	
+	
+}
+function Actualizar_Vista(Obj)
+{
+	var Formulario = $("#Formulario").serializeArray();
+	Opciones_Adicionales(Formulario);
+	Formularios[$(Obj).attr('indice')]=Formulario;
+	$(Obj).fadeOut();
+	Limpiar_Formulario();
+}
+function Organismos_Disponibles()
+{
+	$.post("./PHP/Consulta_Server.php",
+	{
+		Origen:"Organismos_Disponibles"
+	},function(data)
+	{
+		$("#Id_Organismo").html(data);
+	});
+}
+function Genomas_Disponibles()
+{
+	
+	$.post("./PHP/Consulta_Server.php",
+	{
+		Origen:"Genomas_Disponibles"
+	},function(data)
+	{
+		$("#Id_Genoma").html(data);
+	});
+}
+function Librerias_Disponibles()
+{
+	
+	$.post("./PHP/Consulta_Server.php",
+	{
+		Origen:"Librerias_Disponibles"
+	},function(data)
+	{
+		$("#Id_Libreria").html(data);
+	});
+}
+function Consultar_JBrowse()
+{	var Ruta="";
+		
+		if(!$('select[name="Id_Genoma"]').val() && !$('select[name="Id_Libreria"]').val())
+		{
+			alert("Please select a Genome or Library");
+		}
+		else if($('select[name="Id_Genoma"]').val() && $('select[name="Id_Libreria"]').val())
+		{
+			alert("Only can be selected the Genome or Library but not both");
+		}
+		else
+		{
+			if($('select[name="Id_Genoma"]').val())
+			{
+				Ruta+="./JBrowse/index.html?data=";
+				Ruta+="../Indexes/"+$('select[name="Id_Genoma"]').val()+"/JBrowse";
+			}
+			else
+			{
+				var Info = $('select[name="Id_Libreria"]').val().split("_");
+				 Ruta="./Users/Usuario"+Info[1]+"/"+Info[0]+"/JBrowse/index.html?data=";
+			}
+								
+			//PENDIENTE ($("#Id").val())?Ruta_Genoma+="&loc="+$("#Id").val():true;
+						
+						($("#Chr").val())?Ruta+="&loc="+$("#Chr").val():Ruta+="&loc=";
+						
+						($("#Inicio").val())?Ruta+=":"+$("#Inicio").val()+"..":true;
+						if($("#Inicio").val() && $("#Fin").val())Ruta+=$("#Fin").val();
+						else if(!$("#Inicio").val() && $("#Fin").val())Ruta+=":0.."+$("#Fin").val();
+			$("#Modal_JBrowse_Modificar_Librerias").modal('show');
+			JBrowse(Ruta);
+	}
+}
+</script>
+</head>
+
+<body>
+  <form id="Formulario">	
+	  
+	  <blockquote>
+		Especial Search
+	  <footer>Please configurate the search and select "Add view" for anidate views, if you want process all the views, please select "Start".</footer>
+	</blockquote>
+	
+	  
+	<nav class="navbar navbar-default" role="navigation">
+		
+	<div class="container-fluid">
+	  
+	<!-- Brand and toggle get grouped for better mobile display -->
+	<div class="navbar-header">
+	  <a class="navbar-brand" href="#"><div class="glyphicon glyphicon-wrench"></div> Search</a>
+	</div>
+
+	<!-- Collect the nav links, forms, and other content for toggling -->
+	<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+	  <ul class="nav navbar-nav">    
+		<li  ><a style="padding:10px; margin:5px;" class="btn btn-success" onclick="Enviar_Consuta();" href="#" id="btn_Send">Start</a></li>
+		<li  ><a style="padding:10px; margin:5px;" class="btn btn-default" onclick="Consultar_JBrowse()"  href="#" >Check View with JBrowse</a></li>
+	  </ul>
+	 
+	</div><!-- /.navbar-collapse -->
+	</div><!-- /.container-fluid -->
+	</nav>
+
+	<!--body form display--->
+
+	<div class="well">
+		<table class="table-striped" style="width:100%;">
+			<tr>
+				<th>Organism</th>
+				<td>
+					<select id="Id_Organismo" name="Id_Organismo" class="form-control"></select>
+				</td>
+				<th>Genome</th>
+				<td>
+					<select id="Id_Genoma" name="Id_Genoma" class="form-control"></select>
+				</td>
+			</tr>
+			<tr>
+				<th>Library</th>
+				<td>
+						<select id="Id_Libreria" name="Id_Libreria" class="form-control"></select>
+				</td>
+				<th>Biogen</th>
+				<td><input type="text" id="Tipo" name="Tipo" class="form-control"></td>
+			</tr>
+			<tr>
+				<th>Sequence</th>
+				<td><input type="text" id="Secuencia" name="Secuencia" class="form-control"></td>
+				<th>Score</th>
+				<td class="form-inline">
+					<select id="Operacion_Numero_Moleculas" class="form-control">
+						<option value="=" >=</option>
+						<option value=">=">>=</option>
+						<option value="<="><=</option>
+					</select>
+					<input type="text" id="Numero_Moleculas" name="Numero_Moleculas" class="form-control">
+				</td>
+			</tr>
+			<tr>
+				<th>Strand</th>
+				<td><input type="text" id="Sentido" name="Sentido" class="form-control"></td>
+				<th>Chr</th>
+				<td><input type="text" id="Chr" name="Chr" class="form-control"></td>
+			</tr>
+			<tr>
+				<th>Start</th>
+				<td><input type="text" id="Inicio" name="Inicio" class="form-control"></td>
+				<th>End</th>
+				<td><input type="text" id="Fin" name="Fin" class="form-control"></td>
+			</tr>
+			<tr colspan="2">
+				<td colspan="2">
+					<input type="button" class="btn btn-primary" onclick="Agregar_Vista()" style="margin:auto;" value="Add view">
+				</td>
+				<td colspan="2">
+					<input type="button" id="btn_Actualizar" class="btn btn-primary" onclick="Actualizar_Vista(this)" style="display:none; margin:auto;" value="Update view">
+				</td>
+				
+			</tr>
+		
+		</table>
+	
+	</div>
+	
+	<!--/.body form --->
+    </form>
+	<!--Content View -->
+	 
+	  <blockquote>
+		Views
+	  <footer>The evaluation of the elements is of left to right.	</footer>
+	</blockquote>
+	<table>
+	<tr id="Contenedor_Vistas" style="overflow-x:auto;">
+		
+			
+	
+	</tr>
+	</table>
+	
+	<!--/Content View -->
+  
+  
+  
+  
+  
+  
+ 
+<!-- Modal -->
+<div class="modal fade" id="Modal_JBrowse_Modificar_Librerias" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog" style="width:90%">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">JBrowse</h4>
+      </div>
+      <div class="modal-body">
+
+
+         <div style="width:90%; margin:auto; display:inline-block;" class="JB"><iframe id="JBrowse_frame" style="border: 1px solid black; display:none"></iframe></div>
+
+
+ </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+ 
+  
+  
+  
+  
+</body>
+</html>

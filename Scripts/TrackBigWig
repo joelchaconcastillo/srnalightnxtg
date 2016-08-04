@@ -1,0 +1,28 @@
+
+#!/bin/bash
+# Agrega el track de configuración BigWig
+# Joel Chacon Castillo
+# $1<-Ruta del archivo BigWig
+# $2<-Ruta del genoma
+# $3<-Identificador de la librería
+# $4<-Cuenta del usuario
+# $5<-Nombre de la librería
+cd ./../
+cp $2/JBrowse/trackList.json $2/JBrowse/$3trackList.json 
+echo ' {
+       "label" : "bam_coverage",
+       "key" : "BAM coverage",
+       "storeClass" : "BigWig",
+       "urlTemplate" : '\"../../$1/BigWig\"',
+       "type" : "JBrowse/View/Track/Wiggle/XYPlot",
+	"autoscale":"local"
+     } ' | ./bin/add-track-json.pl $2/JBrowse/$3trackList.json
+
+echo ' {
+       "label" : '\" $3 \"',
+       "key" : '\" $5 \"', 
+       "storeClass" : "BigWig",
+       "urlTemplate" : '\"../../$1/BigWig\"',
+       "type" : "JBrowse/View/Track/Wiggle/XYPlot"
+     } ' | ./bin/add-track-json.pl $2/JBrowse/$4trackList.json
+

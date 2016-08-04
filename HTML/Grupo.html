@@ -1,0 +1,670 @@
+<html>
+<head>
+    <script src="js/Ventana_Consultas.js"></script>
+	<script src="js/Help.js"></script>
+    <script src="js/jquery.validate.js" type="text/javascript"></script>
+	<script src="js/Validacion.js"></script>
+<style>
+
+.Names
+{
+	
+	border:ridge 1px #000000;
+-moz-border-radius: 0px;
+-webkit-border-radius: 0px;
+border-radius: 0px;
+	
+}
+.ContentNames
+{
+height: 170px;
+overflow: auto;
+
+}
+.Opcion_Menu_Grupo
+{
+	padding:10px; 
+	display:inline-block;
+}
+.Opcion_Menu_Grupo:hover
+{
+	background:#CCC;
+	-moz-box-shadow: -3px -1px 32px #000000;
+	-webkit-box-shadow: -3px -1px 32px #000000;
+	box-shadow: -3px -1px 32px #000000;	
+}
+.Members
+{
+	color:white;
+	background:#000;
+	position:relative;
+	float:left;
+	width:20%;
+	height:auto;
+	overflow-y: auto;
+	overflow-x:hidden;
+}
+#Nuevo_M
+{
+	width:auto;
+}
+.Members Names
+{
+	display:block;
+	background:#000;
+	color:#FFF;	
+}
+
+</style>
+<script>
+	
+	
+var Id_Grupo=null;
+function Autocompletar(Tabla,Columna,Clase)
+{
+$(function() {
+//$.ajaxSetup( { type: "post" } );
+$("."+Clase).autocomplete({
+	 open: function(){
+        setTimeout(function () {
+            $('.ui-autocomplete').css('z-index', 99999999999999);
+        }, 0);
+    },
+     select: function (a, b) {
+        $(this).attr('Id_Cuenta',b.item.id);
+    },
+        source: function(request, response) {
+            $.ajax({
+                url: "./PHP/Grupo_Server.php",
+                dataType: "json",
+                data: {
+                    term : request.term,
+                    Origen : "Autocompletar"
+                },
+                success: function(data) {
+                    response(data);
+                }
+            });
+        }
+    });
+
+
+
+});
+
+}
+//Imprime los grupos disponibles
+function Grupos_Disponibles()
+{
+	$.post("./PHP/Grupo_Server.php",{Origen:"Modificar_Grupos"},
+	function(data)
+	{
+		$("#Grupos_Disponibles").html(data).promise().done(
+		function()
+		{
+			
+							 var table = $('#Tabla_Grupos').dataTable(
+										{  
+										  "order": [[ 0, "desc" ]],
+										/*"columnDefs": [
+												{ "width": "50", "targets": "1" }
+											  ],
+											*/ scrollY:        "300px",
+											// scrollX:        true,
+											 scrollCollapse: true,
+											"pagingType": "full_numbers",
+											"autoWidth": false,
+											dom: 'T<"clear">lfrtip',	
+										} 
+									   );
+									   $("th").css('text-align','center');
+									   $("th").css('vertical-align','middle');
+									   $("td").css('text-align','center');
+									   $("td").css('vertical-align','middle');
+									/*	var oFC = new $.fn.dataTable.FixedColumns( table, {
+																						leftColumns: 3,
+																						rightColumns: 1
+																					} );*/
+								
+						 
+		}
+		);
+	});
+}
+//Muestra la información de cada usuario
+function Mostrar_Grupo(Id_Grupo)
+{
+	//$("#Members").fadeIn();
+	this.Id_Grupo=Id_Grupo;
+	
+	Mostrar_Miembros(Id_Grupo);
+	Vista_Miembros(Id_Grupo);
+	Consulta_Librerias();
+	
+	
+}
+//Cargar a los miembros del grupo
+function Mostrar_Miembros(Id_Grupo)
+{
+	$.post("./PHP/Grupo_Server.php",
+	{
+		Origen:"Contenido_Grupo",
+		Id_Grupo:Id_Grupo
+	},function(data)
+	{
+		$("#ContentNames").html(data);
+	});
+}
+function Vista_Miembros(Id_Grupo)
+{
+	$.post("./PHP/Grupo_Server.php",
+	{
+		Origen:"Mostrar_Miembros",
+		Id_Grupo:Id_Grupo
+	},function(data)
+	{
+		$("#ContentNames_Vista").html(data);
+	});
+}
+function Nuevo_Miembro()
+{
+	
+	
+		if($("#Formulario_Nuevo_Usuario").valid())
+		{
+			$.post("./PHP/Grupo_Server.php",
+			{
+			  Origen: "Nuevo_Miembro_Grupo",
+			  Id_Cuenta: $("#Nuevo_M").attr('Id_Cuenta') ,
+			  Id_Grupo: Id_Grupo
+			},function(data)
+			{
+				$("#Nuevo_M").val("");
+			   Mostrar_Grupo(Id_Grupo);
+			   
+			}
+			);
+		}
+	
+}
+function Delete(Id)
+{
+	if(confirm("Do you want delete the group?"))
+	{
+		$.post("./PHP/Grupo_Server.php",
+		{
+			Origen:"Borrar_Grupo",
+			Id:Id
+		},function(data)
+		{
+		  $("#hidetr"+Id).fadeOut();	
+		});
+	}
+}
+function Delete_Library(Id)
+{
+	
+	if(confirm("Do you want drop this library of the group?"))
+	{
+		$.post("./PHP/Grupo_Server.php",
+			{
+				Origen:"Borrar_Libreria_Grupo",
+				Id:Id,
+				Grupo:Id_Grupo
+			},function(data)
+			{
+			  $("#hidetr"+Id).fadeOut();	
+			});
+	}
+}	
+function Exit_Member(Id,Id_Grupo_Trabajo)
+{
+	if(confirm("Do you want exit of this group?"))
+	{
+		$.post("./PHP/Grupo_Server.php",
+		{
+			Origen: "Drop_Member",
+			Id_Cuenta: Id,
+			Id_Grupo:Id_Grupo_Trabajo
+		},
+		function(data)
+		{
+			$("#hidetr"+Id_Grupo_Trabajo).fadeOut();
+		});
+	}
+}
+function Drop_Member(Id)
+{
+	
+	$.post("./PHP/Grupo_Server.php",
+	{
+		Origen: "Drop_Member",
+		Id_Cuenta: Id,
+		Id_Grupo:Id_Grupo
+	},
+	function(data)
+	{
+		$("#User"+Id).fadeOut();
+	});
+}
+function Consulta_Librerias()
+{
+	Administrador();
+   $.post("./PHP/Grupo_Server.php",
+   {
+	  Origen: "Consulta_Libreria_Grupo",
+	  Id_Grupo: Id_Grupo   
+   },
+   function(data)
+   {
+	   $("#BodyLibrary").html(data).promise().done(
+	   function()
+	   {
+		    var table = $('#Tabla_Librerias_Grupo').dataTable(
+						{  
+						  "order": [[ 0, "desc" ]],
+						/*"columnDefs": [
+								{ "width": "50", "targets": "1" }
+							  ],
+							 scrollY:        "00px",
+							*/// scrollX:        true,
+							 scrollCollapse: true,
+							"pagingType": "full_numbers",
+							"autoWidth": false,
+							dom: 'T<"clear">lfrtip',	
+					    } 
+			           );
+					
+					/*	var oFC = new $.fn.dataTable.FixedColumns( table, {
+																		leftColumns: 3,
+																		rightColumns: 1
+																	} );*/
+	   });
+	   
+   });
+}
+function Administrador()
+{
+	 $.post("./PHP/Grupo_Server.php",
+   {
+	  Origen: "Administrador",
+	  Id_Grupo: Id_Grupo   
+   },
+   function(data)
+   { 
+	  if(data==0) 
+	  {
+		  $("#btn_Ventana_Nuevo_Miembro").hide();
+		  $("#btn_Ventana_Miembros").show();
+	  }
+	  else
+	  {
+		  $("#btn_Ventana_Nuevo_Miembro").show();
+		  $("#btn_Ventana_Miembros").hide();
+	  }
+   });
+	
+}
+function Cerrar_Ventana(Id)
+{
+	 $("#"+Id).ScreenOff();
+}
+function Enviar_Invitacion()
+{
+	if($("#Contenedor_Email_Grupos").valid())
+	{
+		alert("The mail will be send more less at 20 minutes");
+		$.post("Grupo_./PHP/Server.php",
+				{
+					Origen:"Invitacion",
+					Email: $("#Correo").val(),
+					URL:location.href,
+					Id_Grupo: Id_Grupo
+				});
+				$("#Correo").val("");
+				
+				setTimeout(function()
+				{
+					$("#Cerrar_Enviar_Invitacion").trigger('click');
+				},500)
+	}
+}
+$(document).ready(function(e) {
+	
+	Grupos_Disponibles();
+	Autocompletar("Cuenta","Cuenta","AutoAccount");//Tabla, Nombre Campo,  Clase CSS
+	Validar_Formulario("Formulario_Grupos");
+	Validar_Formulario("Formulario_Nuevo_Usuario");
+	Validar_Formulario("Contenedor_Email_Grupos");
+	$("#Send").click(function()
+	{
+		if($("#Formulario_Grupos").valid())
+	 {
+	
+		$.post("./PHP/Grupo_Server.php",{
+			Origen:$("#Origen").val(),
+			Nombre_Grupo:$("#NameG").val(),
+			Descripcion:$("#Description_Group").val(),
+			
+		},function(data)
+		{
+			$("#NameG").val("");
+			$("#Description_Group").val("");
+			$("#Cerrar_Moldal_Nuevo_Grupo").trigger('click');
+			Grupos_Disponibles();
+		});
+	 }
+		
+	});
+	
+	
+	//Mostrar Miembros
+	$("#btn_Ventana_Miembros").click(function()
+	{
+		
+	});
+	//Se hacen las onsultas de las librería que ha creado cada usuario para agregarlas al grupo
+	$.post("./PHP/Grupo_Server.php",
+	{
+	Origen:"Libreria_Grupos"
+	},function(data)
+	{
+		$('.LibreriasD').html(data);
+		
+	});	
+	
+	$("#Append_Library").click(function()
+	{
+		$.post("./PHP/Grupo_Server.php",
+		{
+		   Origen:"Append_Library",
+		   Id_Libreria: $("#Library_opc").val(),
+		   Id_Grupo: Id_Grupo,
+		   Descripcion_Libreria: $("#Descripcion_Libreria").val()
+		},
+		function(data)
+		{
+			$("#Modal_Cerrar_Importar_Libreria").trigger('click');
+			$("#Descripcion_Libreria").val("");
+			Consulta_Librerias();
+		});
+	});
+});
+
+</script>
+</head>
+<body>
+<!----BOTÓN AGREGAR GRUPO---------->
+<!-- Button trigger modal -->
+<button class="btn btn-primary" style="display:inherit;" id="btn_Modal_Nuevo_Grupo"  data-toggle="modal" data-target="#Modal_Agregrar_Grupo">
+  <span class="glyphicon glyphicon-plus"></span> Add Group
+</button>
+
+<!--MUESTRA LOS GRUPOS DISPONIBLES-->
+		<div id="Contenido">
+			<br>
+			<div id="Grupos_Disponibles">
+			</div>
+		</div>
+<!---------------------------------------->
+
+
+
+<div class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+  <div class="modal-dialog" style="width:90%; height:90%;">
+    <div class="modal-content"  style="width:100%; height:100%;">
+		 <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title">Panel Group</h4>
+      </div>
+
+	<div>
+
+			<!--EMPALMA EL CONTENIDO EL MENÚ DE OPCIONES LATERAL AL CONTENIDO DE UN GRUPO-->		
+				
+				
+						
+						
+						<div id="Opciones_Miembros" >
+							
+							
+							<!------SECCIÓN PARA EL ADMINISTRADOR DEL GRUPO------->
+							<div id="btn_Ventana_Nuevo_Miembro" class="btn btn-default btn-lg Opcion_Menu_Grupo" data-toggle="modal" data-target="#Content_Users"  > 
+								<span class="glyphicon glyphicon-user"></span>
+								<span class="glyphicon glyphicon-plus-sign"></span>
+								<div class="NewMember">New Member</div>
+							</div>
+							<!---------------------------------------------------->
+							<!-----SECCIÓN PARA EL INVITADO----------------------->
+							
+							<div id="btn_Ventana_Miembros"  class="btn btn-default btn-lg Opcion_Menu_Grupo" data-toggle="modal" data-target="#Content_Users_Vista"  > 
+								<span class="glyphicon glyphicon-user"></span>
+								<span class="glyphicon glyphicon-th-list"></span>
+								<div>Show Members</div>
+							</div>
+							<!---------------------------------------------------->
+							
+							
+							<div id="btn_Invitacion_Miembro" class="btn btn-default btn-lg Opcion_Menu_Grupo" data-toggle="modal" data-target="#Invitacion"  > 
+								<span class="glyphicon glyphicon-user"></span>
+								<span class="glyphicon glyphicon-send"></span>
+								<div>Send Invitation</div>
+							</div>
+							
+							
+							<div class="btn btn-default btn-lg Opcion_Menu_Grupo" data-toggle="modal" data-target="#HeaderLibrary"  > 
+								<span class="glyphicon glyphicon-book"></span>
+								<span class="glyphicon glyphicon-plus"></span>
+								<div>Import library</div>
+							</div>
+							
+							
+							
+							
+						</div>
+			<!------------------------------------------------------------------------->
+
+				<!--------------ES EL CONTENIDO DEL GRUPO DE TRABJO LIBRERIAS Y JBROWSE-------------------------------------------->
+
+
+						<div id="ContentLibrary" >
+						<br>
+							<div id="BodyLibrary"  ></div>
+						</div>
+						<br>
+					
+				<br><br>
+				<!---------------------------------------------------------------------------------------------------------->
+				
+	</div>
+
+ </div>
+  </div>
+</div>
+
+<!-------------VISUALIZACIÓN CON JBROWSE------------------------------>
+<div class="modal fade" id="Modal_Contenedor_JBrowse" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog" style="width:90%;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">JBrowse</h4>
+      </div>
+      <div class="modal-body">
+		  
+		  
+<div style="width:90%; margin:auto; display:inline-block;" class="JB">
+	<iframe id="JBrowse_frame" style="border: 1px solid black; display:none"></iframe>
+</div>
+
+
+ </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!--------------------------------------------------------------------->
+   <!------------CONTENEDOR PARA IMPORTAR LIBRERIAS------------------------------->
+   
+   	<!-- Modal -->
+				<div class="modal fade" id="HeaderLibrary" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				  <div class="modal-dialog">
+					<div class="modal-content">
+					  <div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+						<h4 class="modal-title" id="myModalLabel">New Library</h4>
+					  </div>
+					  <div class="modal-body"> 
+		  
+		  
+								<select class="form-control LibreriasD" id="Library_opc">
+								<option value="" disabled="disabled" id="dropdown" selected="selected">Please select a Library</option>
+								</select>
+								<br><br>
+														
+							
+					   </div>
+						  <div class="modal-footer">
+							<button type="button" class="btn btn-default" id="Modal_Cerrar_Importar_Libreria" data-dismiss="modal">Close</button>
+							<button type="button"  id="Append_Library" class="btn btn-primary">Import Library</button>
+						  </div>
+						</div>
+					  </div>
+					</div>
+   <!----------------------------------------------------------------------------->
+
+	<!-------------CONTENERDOR PARA AGREGAR UN NUEVO GRUPO--------------------------------->
+			
+			<!-- Modal -->
+<div class="modal fade" id="Modal_Agregrar_Grupo" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" >Please give a group name</h4>
+      </div>
+      <div class="modal-body">
+					<form id="Formulario_Grupos" >
+						<input type="text" id="Origen" value="Nuevo_Grupo" style="display:none">
+						<table style="margin:auto;">
+							<tr>
+								<th><label>Name group:</label></th>
+								<td><input type="text" class="form-control" required id="NameG" name="NameG"></td>
+							</tr>
+							<tr>
+								<th><label>Description:</label></th>
+								<td><textarea required id="Description_Group" class="form-control" name="Description_Group" cols="50"></textarea></td>
+							</tr>
+						</table>
+					</form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" id="Cerrar_Moldal_Nuevo_Grupo" data-dismiss="modal">Cancel</button>
+        <button type="button" id="Send" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+		
+		
+			
+	<!-------------------------------------------------------------------------------------->
+	
+<!---------------SECCIÓN IZQUIERDA---------------------------------------------------------------->
+	<!----------CONTENERDOR PARA AGREGAR UN USUARIO NUEVO EN UN DETERMINADO GRUPO----------->
+	
+	
+	<div class="modal fade" id="Content_Users" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">New member</h4>
+      </div>
+      <div class="modal-body">
+	
+			<form id="Formulario_Nuevo_Usuario">
+				<fieldset  id="Usuarios_Disponibles" style="width:100%; padding:20px;" >
+				
+				<input type="text" required id="Nuevo_M" onclick="$(this).keypress(function(e){  if ( e.which == 13 ) return false; });" class="AutoAccount"><br>
+					<fieldset>
+					<legend>Members</legend>
+					<div class="ContentNames" id="ContentNames"></div>
+					</fieldset>
+				</fieldset>
+			</form>
+			
+			
+		 </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" onClick="Nuevo_Miembro()" id="btn_Nuevo_Miembro" class="btn btn-primary">Add user</button>
+      </div>
+    </div>
+  </div>
+</div>
+	<!--------------------------------------------------------------------------------------->
+
+	<!-------------CONTENEDOR CON LOS USUARIOS AGREGADOS EN UN GRUPO------------------------>
+	
+<div class="modal fade" id="Content_Users_Vista" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">Members</h4>
+      </div>
+      <div class="modal-body">	
+	
+	
+				<fieldset  id="Usuarios_Disponibles_Vista" style="width:100%; padding:20px;" >
+					
+						<div class="ContentNames" id="ContentNames_Vista"></div>
+					</fieldset>
+				</fieldset>
+	
+	
+</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>	
+	
+	
+	<!-------------------------------------------------------------------------------------->
+	<!------------CONTENEDOR PARA INVITAR POR MEDIO DE EMAIL A UN USUARIO NO REGISTRADO------>
+
+
+<div class="modal fade" id="Invitacion" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">Send invitation by email</h4>
+      </div>
+      <div class="modal-body">
+
+
+	<form id="Contenedor_Email_Grupos">
+		<fieldset  style="width:100%; padding:20px;" >
+		<span>Email:</span>
+		<input type="text" required id="Correo"><br>
+		</fieldset>
+	</form>
+	
+</div>
+      <div class="modal-footer">
+        <button type="button" id="Cerrar_Enviar_Invitacion" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" onClick="Enviar_Invitacion()" class="btn btn-primary">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+	<!-------------------------------------------------------------------------------------->
+<!---------------------------------------------------------------------------------------------->
+</body>
+</html> 	

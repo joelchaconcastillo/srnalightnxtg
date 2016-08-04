@@ -1,0 +1,127 @@
+<html>
+<head>
+
+
+<style>
+.Descargar
+{
+	cursor:pointer;	
+}
+</style>
+<script>
+	      google.load("visualization", "1", {packages:["corechart"]});
+$(document).ready(function(e) {
+   $.post("./PHP/Reporte.php",{Origen:"Cargar_Datos"}, function(data)
+   {
+      $("#Files").html(data.Directorio);
+      $("#Report").html(data.Reporte);
+      $("#STDOUT").html(data.STDOUT);
+     	if(data.Calidad1 != false)
+		{
+			Linechart(data.Calidad1,"Analisis_Calidad1","Quality per cycle ",'Quality by cycle','Quality');
+			Linechart(data.Calidad2,"Analisis_Calidad2","Quality per cycle by quartile ",'Quality by cycle','Quality');
+			ChartFrecuency(data.Frecuencias,"Analisis_Frecuencia","Read Length",'Base frequency by cycle','Nucleotide frequency per base');
+		}
+		else
+		$("#Graficos").css("display","none");
+
+   },'json');
+
+   	  //ChartFrecuency(result,"Analisis_Frecuencia","Nucleotide frequency per base for the lane sample input",'Base frequency by cycle','Frequency','aa');
+
+});
+function dirname(path) {
+    return path.replace(/\\/g,'/').replace(/\/[^\/]*$/, '');;
+}
+function Descargar(Archivo)
+{
+   $.post("./PHP/Reporte.php", {Origen:"Comprimir", Archivo:Archivo },function(data)
+   {
+   setTimeout("location.href='./Comodin/"+Archivo+".zip'", 0);
+   });
+}
+function Mover_Archivo(Archivo, Destino)
+{
+	$.post("./PHP/Reporte.php", 
+		{Origen:"Mover_Archivo", Archivo:Archivo, Destino: Destino },function(data)
+   {
+   
+   });
+}
+function ChartFrecuency(json,id,label,labelx,labely)
+   {
+	  
+           var options = {
+		title:label,
+		 hAxis: {title: labelx, titleTextStyle: {color: 'black'}},
+		 vAxis: {title: labely, titleTextStyle: {color: 'black'}},
+        width: 600,
+        height: 400,
+        legend: { position: 'top', maxLines: 3 },
+	bar: { groupWidth: '75%' },
+        isStacked: true,
+      }; 
+	   var data = new google.visualization.DataTable(json);
+     
+      var chart;
+    chart = new google.visualization.ColumnChart($("#"+id)[0]);		
+      chart.draw(data, options);
+      }
+ function Linechart(json,id,label,labelx,labely)
+ {
+	 var result = { "cols":[ {"type":"string"}, {"type":"number"}], "rows":[ {"c":[{"v":"20-01-13"}, {"v":22}]}, {"c":[{"v":"21-01-13"}, {"v":24}]}, {"c":[{"v":"22-01-13"}, {"v":27}]} ]};
+
+	  var options = {
+		title:label,
+		 hAxis: {title: labelx, titleTextStyle: {color: 'black'}},
+		 vAxis: {title: labely, titleTextStyle: {color: 'black'}},
+        width: 1200,
+        height: 600,
+        legend: { position: 'top', maxLines: 3 },
+	bar: { groupWidth: '75%' },
+        isStacked: true,
+      }; 
+	   var data = new google.visualization.DataTable(json);
+      var chart;
+      chart = new google.visualization.LineChart($("#"+id)[0]);
+      chart.draw(data, options);
+ }
+
+</script>
+</head>
+<body>
+	<nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#"><div class="glyphicon glyphicon-wrench"></div> Report</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li  ><a style="padding:10px; margin:5px;" class="btn btn-success" href="#" onclick="Finalizar_Procesos()"; id="Flecha">End flow process</a></li>
+</li>
+      </ul>
+     
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav><fieldset>
+<legend>Output Files</legend>
+<div id="Files">
+</div>
+</fieldset>
+<fieldset id="Graficos"> 
+<legend>Report statistical data</legend>
+<div id="Analisis_Calidad1"></div>
+<div id="Analisis_Calidad2"></div>
+<div id="Analisis_Frecuencia"></div>
+<div id="Report">
+</div>
+</fieldset>
+<fieldset >
+<legend>Standart Output</legend>
+<div id="STDOUT">
+</div>
+</body>
+</html>

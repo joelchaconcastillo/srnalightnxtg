@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style 
+<style>
+#Tabla_Campos tr
+{
+	height:60px;
+}
+</style>
+
+<script>
+$(document).ready(function(e) {
+	Consultar_Organismos();
+	Validar_Formulario('Formulario_Organismo');
+	   $("#Alta_Organismo").on('hidden.bs.modal', function () {
+			Borrar_Campos_Organismo();
+		});
+});
+function Consultar_Organismos()
+{
+	
+	$.post("./PHP/Organismo_Server.php",
+	   {
+		   Origen: "Mostrar_Organismo"
+	   },
+	   function(data)
+	   {
+			 $("#table").html(data).promise().done(function()
+			 {
+				 var table = $('#Tabla_Organismos').dataTable({ 
+																	"order": [[ 0, "desc" ]],
+										/*"columnDefs": [
+												{ "width": "50", "targets": "1" }
+											  ],
+											 scrollY:        "300px",
+											*/	// scrollX:        true,
+											 scrollCollapse: true,
+											"pagingType": "full_numbers",
+											"autoWidth": false,
+											dom: 'T<"clear">lfrtip'	
+																});	
+																
+						
+			 });
+	   });
+}
+function Borrar_Campos_Organismo()
+{
+	$("#Nombre_Organismo").val("");
+	$("#Ecotipo_Organismo").val("");
+}
+function Guardar_Organismo()
+{
+	if($( "#Formulario_Organismo").valid())
+	{
+		var Form = $("#Formulario_Organismo").serializeArray();
+		Form.push({name: 'Origen', value:'Alta_Organismo' });
+		$.post("./PHP/Organismo_Server.php",Form,
+			function(data)
+			{
+				$("#Cerrar_Modal_Organismo").trigger('click');
+				Consultar_Organismos();
+			}
+			);
+	}
+}
+function Borrar_Organismo(Elemento)
+{
+	if(confirm("Do you want delete this organism?"))
+	{
+		$.post("./PHP/Organismo_Server.php",
+				{
+					Origen: 'Borrar_Organismo',
+					Id_Organismo: $(Elemento).attr('Id_Organismo')
+				},
+				function(data)
+				{
+					Consultar_Organismos();
+				});
+	}
+}
+function Actualizar_Nombre_Organismo(Elemento)
+{
+	
+	$(Elemento).html('<input type="text" value="'+$(Elemento).html()+'" style="width:200px; display:inline-block;" class="form-control" Autofocus > <input type="button" Id_Organismo= "'+$(Elemento).attr('Id_Organismo')+'" onclick="Actualizar_Organismo(this)" value="Save" class="btn btn-success"> <input type="button" value="Cancel" class="btn btn-danger" onclick="Consultar_Organismos()">');
+	$(Elemento).removeAttr("onclick");
+
+}
+function Actualizar_Ecotipo_Organismo(Elemento)
+{
+	
+	$(Elemento).html('<input type="text" value="'+$(Elemento).html()+'" style="width:200px; display:inline-block;" class="form-control" Autofocus > <input type="button" Id_Organismo= "'+$(Elemento).attr('Id_Organismo')+'" onclick="Actualizar_Ecotipo(this)" value="Save" class="btn btn-success"> <input type="button" value="Cancel" class="btn btn-danger" onclick="Consultar_Organismos()">');
+	$(Elemento).removeAttr("onclick");
+}
+function Actualizar_Organismo(Elemento)
+{
+	$.post("./PHP/Organismo_Server.php",
+			{
+				Origen: 'Actualizar_Organismo',
+				Id_Organismo: $(Elemento).attr('Id_Organismo'),
+				Organismo:$(Elemento).parent().find(':text').val()
+			},
+			function(data)
+			{
+				Consultar_Organismos();
+			});
+}
+function Actualizar_Ecotipo(Elemento)
+{
+	$.post("./PHP/Organismo_Server.php",
+			{
+				Origen: 'Actualizar_Ecotipo',
+				Id_Organismo: $(Elemento).attr('Id_Organismo'),
+				Ecotipo:$(Elemento).parent().find(':text').val()
+			},
+			function(data)
+			{
+				Consultar_Organismos();
+			});
+}
+
+</script>
+</head>
+<body>	
+	<div id="Contenido">
+		<nav class="navbar navbar-default" role="navigation">
+		  <div class="container-fluid">
+			<!-- Brand and toggle get grouped for better mobile display -->
+			<div class="navbar-header">
+			  <a class="navbar-brand" href="#"><div class="glyphicon glyphicon-wrench">
+			  </div> Organism configuration ( please select the field to edit )</a>
+			</div>
+
+			<!-- Collect the nav links, forms, and other content for toggling -->
+			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			  <ul class="nav navbar-nav">
+				<li  ><a style="padding:10px; margin:5px;" class="btn btn-info"  data-toggle="modal" data-target="#Alta_Organismo">New Organism</a></li>
+			  </ul>
+			</div><!-- /.navbar-collapse -->
+		  </div><!-- /.container-fluid -->
+		</nav>
+
+
+		<div id="NUpdate"><br>
+			<div id="table">
+			</div>
+		</div>
+	</div>
+	
+<!--VENTANA EMERGENTE -->
+
+<!-- Modal -->
+<div class="modal fade" id="Alta_Organismo" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" id="Cerrar_Modal_Organismo" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">New organism</h4>
+      </div>
+      <div class="modal-body">
+		  <form class="form-inline" id="Formulario_Organismo" >
+				<table id="Tabla_Campos" style="margin:auto;">
+					<tr>
+						<td>
+							<label>Organism Name: </label>
+						</td>
+						<td>
+							<input type="text" name="Nombre_Organismo" id="Nombre_Organismo" class="form-control" required>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label>Ecotype: </label>
+						</td>
+						<td>
+							<input type="text" name="Ecotipo_Organismo" id="Ecotipo_Organismo" class="form-control" required>
+						</td>
+					</tr>
+				</table>
+		</form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal"  >Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="Guardar_Organismo();" >Save</button>
+      </div>
+    </div>
+  </div>
+</div>	
+	
+	
+</body>
+</html>

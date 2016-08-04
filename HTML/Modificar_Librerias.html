@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+</style>
+ <script src="js/Ventana_Consultas.js"></script>
+<script>
+$(document).ready(function(e) {
+	Consultar_Librerias();	   
+});
+function Consultar_Librerias()
+{	
+	$.post("./PHP/ModificarLibrerias_Server.php",
+	   {
+		   Origen: "MLibrary"
+	   },
+	   function(data)
+	   {
+			 $("#Contenedor_Tabla_Librerias").html(data).promise().done(function()
+			 {
+							 $("#BodyLibrary").html(data).promise().done(
+									   function()
+									   {
+													var table = $('#Tabla_Librerias').dataTable(
+																{  
+																  "order": [[ 0, "desc" ]],
+																	 scrollCollapse: true,
+																	"pagingType": "full_numbers",
+																	"autoWidth": false,
+																	dom: 'T<"clear">lfrtip'	
+																});
+								   });
+		   });
+   });
+}
+function Actualizar(Elemento)
+{
+	$(Elemento).html('<input type="text" value="'+$(Elemento).html()+'" style="width:150px; display:inline-block;" class="form-control" Autofocus ><br> <input type="button" Campo="'+$(Elemento).attr('Campo')+'" Id_Libreria = "'+$(Elemento).attr('Id_Libreria')+'" onclick="Actualizar_Campo(this)" value="Save" class="btn btn-success"> <input type="button" value="Cancel" class="btn btn-danger" onclick="Consultar_Librerias()">');
+	$(Elemento).removeAttr("onclick");
+}
+function Actualizar_Campo(Elemento)
+{
+	$.post("./PHP/Libreria_Server.php",
+			{
+				Origen: 'Actualizar_Campo',
+				Id_Libreria: $(Elemento).attr('Id_Libreria'),
+				Campo: $(Elemento).attr('Campo'),
+				Valor:$(Elemento).parent().find(':text').val()
+			},
+			function(data)
+			{
+				Consultar_Librerias();
+			});
+}
+function Borrar_Libreria(Element)
+{
+	if(confirm("Do you want to drop this library and temporary files?"))
+	{
+		$.post("./PHP/ModificarLibrerias_Server.php",
+			{
+			   Id_Libreria: $(Element).attr("Id_Libreria"),
+			   Origen: "Delete_Library"
+			},function(data)
+			{
+			}
+			);
+     $(Element).parent().parent().fadeOut(500);
+	  alert("This library will be deleted in the next minutes..");
+	}
+	
+}
+
+
+
+</script>
+</head>
+<body>	
+<div id="Contenido">
+<div id="NUpdate"><br>
+<div id="Contenedor_Tabla_Librerias">
+</div>
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="Modal_JBrowse_Modificar_Librerias" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog" style="width:90%">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">JBrowse</h4>
+      </div>
+      <div class="modal-body">
+
+
+         <div style="width:90%; margin:auto; display:inline-block;" class="JB"><iframe id="JBrowse_frame" style="border: 1px solid black; display:none"></iframe></div>
+
+
+ </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+</div>
+</div>
+</body>
+</html>

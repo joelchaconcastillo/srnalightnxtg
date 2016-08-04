@@ -1,0 +1,207 @@
+<html>
+<body>
+<script src="./js/jquery.validate.js" type="text/javascript"></script>
+<script src="./js/Validacion.js"></script>
+<script src="./js/Help.js"></script>
+
+<style>
+	.Grupo_Herramientas
+	{
+		width:80%;
+		margin:20px;
+		
+	}
+	.Content_Pipe
+	{
+		position:fixed;
+		right:0px;
+		top:100px;
+		width:15%;
+		height:100%;
+		border-left:solid 1px;
+		padding:10px;
+	}
+	.Close_General
+	{
+		float:right;
+		cursor:pointer;
+	}
+	#Library th
+	{
+		text-align:center;
+	}
+</style>
+<script language="javascript"> 
+
+$(document).ready(function(e) {
+
+	$("#Cutadapt").popover({ trigger: "hover" });
+	$("#Reaper").popover({ trigger: "hover" });
+	$("#Clipper").popover({ trigger: "hover" });
+	
+	$("#Collapser").popover({ trigger: "hover" });
+	$("#Tally").popover({ trigger: "hover" });
+	
+	$("#Trimmer").popover({ trigger: "hover" });
+	$("#Quality_Filter").popover({ trigger: "hover" });
+	$("#Quality_Trimmer").popover({ trigger: "hover" });
+	$("#Quality_Masker").popover({ trigger: "hover" });
+	$("#Minion").popover({ trigger: "hover" });
+	
+	$("#Start_Pipeline").click(
+        function()
+        {
+	  var Pipe= new Array();
+	  var Nombre= new Array();
+           $(".Content_Pipe label").each(
+           function(index, value)
+                {
+		    Pipe.push($(value).attr('value'));	
+		    Nombre.push($(value).attr('Nombre'));
+                }).promise().done(
+			function(){Enviar_Contenido_Pipe(Pipe, Nombre);}
+		     );
+        });
+	   $("#Option_Default").click(
+	function()
+   		{
+			$("#Content_Dinamic").html("");
+			$("#Cutadapt").trigger("click");	
+			$("#Tally").trigger("click");	
+  		});
+
+	$.post("./PHP/Libreria_Server.php",{Origen:"Genomas"},function(data)
+	{
+		$("#Organism").html(data);
+	});
+	
+		
+});
+function Eliminar_Elemento(Element)
+{
+   $(Element).parent().remove();
+}
+function Agregar_Elemento(Nombre, Id, Script)
+{
+        $("#Content_Dinamic").append('<div class="Principal_Element" style="background:green"><div class="Close_General glyphicon glyphicon-remove-sign" onclick=Eliminar_Elemento(this)></div><label Nombre="'+Nombre+'" value="'+Script+'" >'+Nombre+'</label></div>');
+}
+function Check_Library()
+{
+	 $.post("./PHP/Libreria_Server.php",
+	      {
+		 Origen:"CLibrary",
+		  Key:$("#Nombre_Libreria").val()
+		  },function(data)
+				{
+				if(data==0)
+				{
+					if( $("#Library").valid())
+		  			{ 					
+					    $("#Datos_Alta_Libreria").slideUp();
+					    $("#Procesos").slideDown();
+					}
+				}
+				else
+					{
+						alert("The name of the library already exists");
+					}
+		});
+			
+}
+function Enviar_Contenido_Pipe(Pipe, Nombre)
+{
+    var Formulario =$("#Formulario_Tuberia").serializeArray();
+    Formulario.push({name:'Origen', value:'Almacenar_Tuberia'});
+    Formulario.push({name:'Pipe', value:Pipe});
+    Formulario.push({name:'Nombre', value:Nombre});
+    
+	$.post("./PHP/Libreria_Server.php",Formulario ,function(Object)
+			{
+				Abrir_Proceso(Object.Id_HTOP);
+			},'json');
+}
+</script>
+<form class="form-inline" name="Formulario_Tuberia" id="Library">
+
+  <div id="Procesos" >      
+	  <h4>Please select the tools</h4>
+    <div class="Content_Menu_Izquierdo" style="width:80%;	" id="Content_Menu_Izquierdo"  >
+		
+		  
+		    <table style="width:auto; display:inline-block; vertical-align:top;" class='table table-hover'>
+			<tr><th>Removing sequencing adapters</th></tr>
+			<tr>
+				<td>	
+				  <div id="Cutadapt" style="width:150px;" class="btn btn-default" onClick="Agregar_Elemento('Cutadapt','Cutadapt','Cutadapt.html')" title="Description" data-content="Removes adapter sequences from high-throughput sequencing data. Formats: Fasta, FastQ (Illumina) and CSFastQ (SOLiD).">Cutadapt</div>
+				</td>
+		    </tr>   
+		    <tr>
+				<td>
+				   <div id="Reaper"  style="width:150px;" class="btn btn-default" onClick="Agregar_Elemento('Reaper','Reaper','Reaper.html')" title="Description" data-content="It is a program for demultiplexing, trimming and filtering short read sequencing data. It can handle barcodes, trim adapter sequences, strip low quality bases and low complexity sequence, and has many more features. Formats: Fasta, FastQ">Reaper</div>
+				</td>
+			</tr>
+			<tr>	
+				<td>
+				   <div id="Clipper"  style="width:150px;" class="btn btn-default" onClick="Agregar_Elemento('Clippler','Clipper','Clipper.html')" title="Description" data-content="Removing sequencing adapters / linkers. Formats: Fasta, FastQ">Clipper</div><br>
+				</td>
+            </tr>
+          </table>
+		    <table style="width:auto; display:inline-block; vertical-align:top;" class='table table-hover'>
+				<tr><th>Collapsing identical sequences</tr>	
+				<tr>
+					<td><div style="width:150px;" class="btn btn-default" id="Collapser" onClick="Agregar_Elemento('Collapser','Collapser','Collapser.html')" title="Description" data-content="Collapsing identical sequences in a FASTQ/A file into a single sequence (while maintaining reads counts). Formats: Fasta, FastQ">Collapser</div><br></td>
+				</tr>
+				<tr>
+					<td><div id="Tally"  style="width:150px;" class="btn btn-default" onClick="Agregar_Elemento('Tally','Tally','Tally.html')" title="Description" data-content="Removes redundancy from sequence files by collapsing identicle reads to a single entry while recording the number of instances of each. Formats: Fasta, FastQ">Tally</div><br></td>
+				</tr>
+            </table>
+		  
+		  
+		       <table style="width:auto; display:inline-block; vertical-align:top;" class='table table-hover'>
+		      	<tr><th>Others</th></tr>
+		       <tr>
+			      <td><div id="Trimmer"  style="width:150px;" class="btn btn-default" onClick="Agregar_Elemento('Trimmer','Trimmer','Trimmer.html')" title="Description" data-content="Shortening reads in a FASTQ or FASTQ files (removing barcodes or noise). Formats: Fasta, FastQ">Trimmer</div></td>
+		       </tr>
+		       <tr>
+		          <td><div id="Quality_Filter" style="width:150px;" class="btn btn-default" onClick="Agregar_Elemento('Quality Filter','Quality_Filter','Quality_Filter.html')" title="Description" data-content="Filters sequences based on quality. Format: FastQ">Quality Filter</div></td>
+		       </tr>
+		       <tr>
+		          <td><div id="Quality_Trimmer"  style="width:150px;" class="btn btn-default" onClick="Agregar_Elemento('Quality Trimmer','Quality_Trimmer','Quality_Trimmer.html')" title="Description" data-content="Trims (cuts) sequences based on quality. Format: FastQ">Quality Trimmer</div></td>
+		       </tr>
+		       <tr>
+		           <td><div id="Quality_Masker"   style="width:150px;"class="btn btn-default" onClick="Agregar_Elemento('Quality Masker','Quality_Masker','Quality_Masker.html')" title="Description" data-content="Masks nucleotides with 'N' (or other character) based on quality. Format: FastQ">Quality Masker</div></td>
+		       </tr>
+		       <tr>
+		          <td><div id="Minion"  style="width:150px;" class="btn btn-default" onClick="Agregar_Elemento('Minion','Minion','Minion.html')" title="Description" data-content="It is a small utility program to infer or test the presence of 3' adapter sequence in sequencing data. Format: FastQ">Minion</div></td>
+		       </tr>
+		       </table>
+		   
+	</div>
+
+   <div class="Content_Pipe" style="display:inline-block; width:20%;">
+		   <button type="button" id="Start_Pipeline" style="display:inline-block" class="btn btn-success"  ><span class="glyphicon glyphicon-ok"></span> Start</button>
+			<input type="button" id="Option_Default" class="btn btn-default " value="Default">
+			<br><br>
+			   <div class="panel panel-primary" >
+				       <div class="panel-heading">Flow process</div>
+					   <div class="panel-body">
+						  
+						   <div class="Content_Panel" style="overflow-y:auto; height:110px;">
+								   <div id="Content_Dinamic">
+								   </div>
+							   <div class="btn-primary Principal_Element">
+							   <label value="Bowtie.html" Nombre="Bowtie">Bowtie</label>
+							   </div>
+		                  </div>
+		                  <br>
+		                  <div class="Content_Panel">
+								
+								<br>
+					      </div>
+                  </div>
+               </div>
+   </div>
+</form>
+
+</body>
+</html>

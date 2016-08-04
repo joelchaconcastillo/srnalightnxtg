@@ -1,0 +1,402 @@
+<html>
+	<head>
+		<script src="js/Validacion.js"></script>
+		<script src="js/Send.js"></script>
+	</head>
+<style>
+#Formulario_Subir_Genoma tr
+{
+	height:60px;
+}
+</style>
+ <script>
+	 $(document).ready(function()
+	 {
+		 Validar_Formulario('Formulario_Subir_Genoma');
+		 Organismos_Disponibles();
+		 Cargar_Tabla_Genomas();
+		  $("#Alta_Genoma").on('hidden.bs.modal', function () {
+			Limpiar_Campos();
+		});  
+	 });
+	 function Organismos_Disponibles()
+	 {
+		$.post("./PHP/IndexarGenoma_Server.php",{Origen: 'Organismos_Disponibles'},
+			function(data)
+			{
+				$("#Organismos_Disponibles").html(data);
+			}); 
+	 }
+	 function Cargar_Tabla_Genomas()
+	 {
+		 $.post("./PHP/IndexarGenoma_Server.php",{Origen:'Informacion_Genomas_Disponibes'},
+		 function(data)
+		 {
+			 $("#Contenedor_Tabla_Genomas").html(data).promise().done(function()
+			 {
+					var table = $('#Tabla_Genomas').dataTable(
+																{ "order": [[ 0, "desc" ]],
+										/*"columnDefs": [
+												{ "width": "50", "targets": "1" }
+											  ],
+											 scrollY:        "300px",
+											*/	// scrollX:        true,
+											 scrollCollapse: true,
+											"pagingType": "full_numbers",
+											"autoWidth": false,
+											dom: 'T<"clear">lfrtip'	
+																});	
+				 });
+		 });
+	 }
+	 function Guardar_Genoma()
+	 {
+		 
+		 if($('#Formulario_Subir_Genoma').valid())
+		 {
+			Enviar_Genoma(); 
+			}
+	 }
+ function Enviar_Genoma()
+ {
+	  /*Información del formulario serializado para reenviar la misma información durante cada etapa*/
+		  var Formulario_Serializado=$('#Formulario_Subir_Genoma').serializeArray();
+		  //Obtener el nombre de los archivos
+			var Genoma_Fasta = $("#Genoma_Fasta")[0].files[0]; 
+			var Genoma_GFF = $("#Genoma_GFF")[0].files[0];
+			if(Genoma_Fasta)
+			Formulario_Serializado.push({name:'Genoma_Fasta', value: Genoma_Fasta.name});
+			if(Genoma_GFF)
+			Formulario_Serializado.push({name:'Genoma_GFF', value: Genoma_GFF.name});
+			
+		/*Se genera un objeto para enviar los archivos adjuntos al formulario*/	
+         var Form = new FormData($('#Formulario_Subir_Genoma')[0]); 
+         Form.append("Origen","Preparar_Archivos"); 
+         
+		$("#Formulario_Subir_Genoma :text").prop('disabled', true);
+		$("#Organismos_Disponibles").prop('disabled', true);
+		$("#Formulario_Subir_Genoma :file").prop('disabled', true);
+  $.ajax({ 
+             xhr: function() { 
+             var xhr = new window.XMLHttpRequest(); 
+             xhr.upload.addEventListener("progress", function(evt) { 
+            if (evt.lengthComputable) { 
+             var percentComplete = Math.round(evt.loaded * 100 / evt.total); 
+              $("#Progreso").html("Uploading "+percentComplete.toString() + '%'); 
+              $("#Progreso").css('width',percentComplete+"%"); 
+           } 
+       }, false); 
+       return xhr; 
+    }, 
+        url: './PHP/IndexarGenoma_Server.php', 
+        type: 'POST', 
+        data: Form, 
+        cache: false, 
+        dataType: 'json', 
+        processData: false, // Don't process the files 
+        contentType: false, // Set content type to false as jQuery will tell the server its a query string request 
+        success: function(JSON, textStatus, jqXHR) 
+        {             
+          $("#Progreso").html("0%");
+          $("#Progreso").css('width',"0%"); 
+          Descomprimir_Archivos(Formulario_Serializado);
+		
+	  
+        }, 
+        error: function(jqXHR, textStatus, errorThrown) 
+        { 
+                console.log('ERRORS: ' + textStatus); 
+        } 
+      });
+ }
+function Descomprimir_Archivos(Formulario)
+{
+	
+	$("#Progreso").html("30% Unzipping file");
+	$("#Progreso").css('width',"30%"); 
+	Formulario.push({name:'Origen', value: 'Descomprimir_Archivos'});
+	$.post("./PHP/IndexarGenoma_Server.php",Formulario,
+	function(JSON)
+	{	
+		if(JSON.Error)
+		{
+			alert(JSON.Error);
+		}
+		else
+		{
+			$("#Progreso").html("60% Indexing file Fasta");
+			$("#Progreso").css('width',"60%"); 
+			Indexar_Archivo_Fasta(Formulario);
+		}
+	},'json');
+	
+}
+function Indexar_Archivo_Fasta(Formulario)
+{
+	Formulario.push({name:'Origen', value: 'Indexar_Fasta'});
+	$.post("./PHP/IndexarGenoma_Server.php",Formulario,
+	function(JSON)
+	{
+		if(JSON.Error)
+		{
+			alert(JSON.Error);
+		}
+		else
+		{
+			$("#Progreso").html("90% JBrowse");
+			$("#Progreso").css('width',"90%"); 
+			Preparar_JBrowse(Formulario);
+		}
+	},'json');
+}
+function Preparar_JBrowse(Formulario)
+{
+	Formulario.push({name:'Origen', value: 'Preparar_JBrowse'});
+	$.post("./PHP/IndexarGenoma_Server.php", Formulario,
+	function(JSON)
+	{
+		if(JSON.Error)
+		{
+			alert(JSON.Error);
+		}
+		else
+		{
+			$("#Progreso").html("100% Ready¡");
+			$("#Progreso").css('width',"100%"); 
+			Limpiar_Campos();
+			alert("Genome ready¡");
+			$("#Cerrar_Modal").trigger('click');
+			Cargar_Tabla_Genomas();
+		}
+	},'json');
+}
+function Limpiar_Campos()
+{
+			$("#Formulario_Subir_Genoma :text").prop('disabled', false);
+			$("#Formulario_Subir_Genoma :text").val("");
+			$("#Organismos_Disponibles").prop('disabled', false);
+			$("#Formulario_Subir_Genoma :file").prop('disabled', false);
+			$("#Contenedor_Genoma_Fasta").html('<input type="file" id="Genoma_Fasta" name="Genoma_Fasta" class="form-control">');
+			$("#Contenedor_Genoma_GFF").html('<input type="file" id="Genoma_GFF" name="Genoma_GFF" class="form-control">');
+			$("#Progreso").html("0%");
+			$("#Progreso").css('width',"0%"); 
+}
+function Borrar_Genoma(Element)
+{
+	if(confirm("Do you want delete this genome?"))
+	{
+		$.post("./PHP/IndexarGenoma_Server.php",
+		{
+			Origen:'Borrar_Genoma',
+			Id_Genoma: $(Element).attr('Id_Genoma')},
+		function(data)
+		{
+			Cargar_Tabla_Genomas();
+			alert("Genome deleted¡");
+		});
+	}
+}
+
+function Actualizar(Elemento)
+{
+	$(Elemento).html('<input type="text" value="'+$(Elemento).html()+'" style="width:200px; display:inline-block;" class="form-control" Autofocus > <input type="button" Campo="'+$(Elemento).attr('Campo')+'" Id_Genoma= "'+$(Elemento).attr('Id_Genoma')+'" onclick="Actualizar_Campo(this)" value="Save" class="btn btn-success"> <input type="button" value="Cancel" class="btn btn-danger" onclick="Cargar_Tabla_Genomas()">');
+	$(Elemento).removeAttr("onclick");
+}
+function Actualizar_Campo(Elemento)
+{
+	$.post("./PHP/IndexarGenoma_Server.php",
+			{
+				Origen: 'Actualizar_Campo',
+				Id_Genoma: $(Elemento).attr('Id_Genoma'),
+				Campo: $(Elemento).attr('Campo'),
+				Valor:$(Elemento).parent().find(':text').val()
+			},
+			function(data)
+			{
+				Cargar_Tabla_Genomas();
+			});
+}
+function Actualizar_Organismo(Elemento)
+{
+	$.post("./PHP/IndexarGenoma_Server.php",{Origen: 'Organismos_Disponibles'},
+			function(data)
+			{
+				var Select='<select class="form-control" style="display:inline-block;">'+data+'</select>';
+				$(Elemento).html(Select+' <input type="button" Campo="'+$(Elemento).attr('Campo')+'" Id_Genoma= "'+$(Elemento).attr('Id_Genoma')+'" onclick="Actualizar_Campo_Organismo(this)" value="Save" class="btn btn-success"> <input type="button" value="Cancel" class="btn btn-danger" onclick="Cargar_Tabla_Genomas()">');
+				$(Elemento).removeAttr("onclick");
+			}); 
+	
+}
+function Actualizar_Campo_Organismo(Elemento)
+{
+	$.post("./PHP/IndexarGenoma_Server.php",
+			{
+				Origen: 'Actualizar_Campo',
+				Id_Genoma: $(Elemento).attr('Id_Genoma'),
+				Campo: $(Elemento).attr('Campo'),
+				Valor:$(Elemento).parent().find('option:selected').val()
+			},
+			function(data)
+			{
+				Cargar_Tabla_Genomas();
+			});
+}
+</script>	 
+<body>
+
+
+
+
+
+	<div id="Contentenedor">
+		
+		
+					<nav class="navbar navbar-default" role="navigation">
+			  <div class="container-fluid">
+				<!-- Brand and toggle get grouped for better mobile display -->
+				<div class="navbar-header">
+				  <a class="navbar-brand" href="#"><div class="glyphicon glyphicon-wrench">
+				  </div> Genome configuration ( please select the field to edit )</a>
+				</div>
+
+				<!-- Collect the nav links, forms, and other content for toggling -->
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+				  <ul class="nav navbar-nav">
+					<li  ><a style="padding:10px; margin:5px;" class="btn btn-info"  data-toggle="modal" data-target="#Alta_Genoma">New Genome</a></li>
+				  </ul>
+				</div><!-- /.navbar-collapse -->
+			  </div><!-- /.container-fluid -->
+			</nav>
+		<!--TABLA---->
+		<div id="Contenedor_Tabla_Genomas">
+		</div>
+		
+		
+		
+		<!-- Modal -->
+		<div class="modal fade" id="Alta_Genoma" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		  <div class="modal-dialog">
+			<div class="modal-content">
+			  <div class="modal-header">
+				<button type="button" class="close" id="Cerrar_Modal" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+				<h4 class="modal-title" id="myModalLabel">New Genome</h4>
+			  </div>
+			  <div class="modal-body">
+				<form id="Formulario_Subir_Genoma">
+					<table style="margin:auto;">
+						<tr>
+							<td>
+								<label>Organism:</label>
+							</td>
+							<td>
+								<select class="form-control" name="Organismo" id="Organismos_Disponibles" required>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label>Genome name:</label>
+							</td>
+							<td>
+								<input type="text" name="Nombre_Genoma" id="Nombre_genoma" class="form-control" required>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label>Version:</label>
+							</td>
+							<td>
+								<input type="text" name="Version_Genoma" id="Version_Genoma" class="form-control" required>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label>Description:</label>
+							</td>
+							<td>
+								<input type="text" name="Descripcion_Genoma" id="Descripcion_Genoma" class="form-control" required>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label>Source:</label>
+							</td>
+							<td>
+								<input type="text" name="Origen_Genoma" id="Origen_Genoma" class="form-control" required>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label>Fasta:</label>
+							</td>
+							<td id="Contenedor_Genoma_Fasta">
+								<input type="file" id="Genoma_Fasta" name="Genoma_Fasta" class="form-control" required>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label>GFF (General Feature Format):</label>
+							</td>
+							<td id="Contenedor_Genoma_GFF">
+								<input type="file" id="Genoma_GFF" name="Genoma_GFF" class="form-control">
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label>Progress:</label>
+							</td>
+							<td>
+								<div>
+									
+									<div class="progress" style="margin:0px;">
+									  <div class="progress-bar" role="progressbar" id="Progreso" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%; color:black;">
+										0%
+									  </div>
+									</div>
+								</div>
+							</td>
+						</tr>
+						
+						
+					</table>
+				</form>
+			  </div>
+			  <div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				<button type="button" class="btn btn-primary" onclick="Guardar_Genoma();">Save</button>
+			  </div>
+			</div>
+		  </div>
+		</div>
+		
+	</div>
+<!-- Modal -->
+<div class="modal fade" id="Modal_JBrowse_Genoma" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog" style="width:90%">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">JBrowse</h4>
+      </div>
+      <div class="modal-body">
+
+
+         <div style="width:90%; margin:auto; display:inline-block;" class="JB"><iframe id="JBrowse_frame" style="border: 1px solid black; display:none"></iframe></div>
+
+
+ </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</body>
+</html>

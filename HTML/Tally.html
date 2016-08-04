@@ -1,0 +1,132 @@
+<html>
+<head>
+	<!--
+<link href="css/normalize.css" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="css/screen.css">
+<link href="css/bootstrap-3.1.1-dist/css/bootstrap.min.css" rel="stylesheet">
+
+<script src="js/jquery-1.9.1.min.js"></script>
+<script src="js/jquery.balloon.js"></script>-->
+<script src="js/jquery.validate.js" type="text/javascript"></script>
+<script src="js/Validacion.js"></script>
+<script src="js/Help.js"></script>
+<style>
+.Content_Tally label
+{
+	width:300px;
+}
+</style>
+<script>
+$(document).ready(
+function()
+{
+$("#Flecha").click(function()
+   {
+	   var Formulario=$("#Content_Tally").serializeArray();
+	   Formulario.push({name:'URL', value: document.URL});
+	   Formulario.push({name:'Origen', value: 'Ejecutar'});
+      $.post("./PHP/Tally.php",Formulario ,function(data){Cargar_Logo();});
+   });
+$("#Guardar").click(function()
+   {
+	   var Formulario=$("#Content_Tally").serializeArray();
+	   Formulario.push({name:'URL', value: document.URL});
+	   Formulario.push({name:'Origen', value: 'Guardar'});
+      $.post("./PHP/Tally.php",Formulario ,function(data){Siguiente_Pipe();});
+   });
+ 
+});
+</script>
+</head>
+<body>
+<form class="Content_Tally" id="Content_Tally">
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+		<div class="navbar-brand" href="#"><div class="glyphicon glyphicon-wrench"></div> Tally</div>
+		<a class="navbar-brand" href="ftp://ftp.ebi.ac.uk/pub/contrib/enrightlab/kraken/reaper/src/reaper-latest/doc/tally.html" target="_blank"><div class="glyphicon glyphicon-bookmark"></div> Manual</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+		 <!--<li><a>Make graphics <input type="checkbox" id="Make_Gph" name="Make_Gph"></a></li>-->
+        <li  ><a style="padding:10px; margin:5px;" class="btn btn-info" href="#" id="Guardar">Save</a></li>
+        <li  ><a style="padding:10px; margin:5px;" class="btn btn-success" href="#" id="Flecha">Start</a></li>
+</li>
+      </ul>
+     
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+<input type="text" id="Origen" name="Origen" style="display:none;" value="Formulario">
+<table class="table table-striped active" style="display:inline-block; vertical-align:top; margin-right:100px; width:auto;" > 
+	<tr>
+		<td>
+			<label>Pass quality scores along, collate by taking per-base max (With Quality)</label>
+		</td>
+		<td>
+			<input type="checkbox" name="Option_With_Quality">
+		</td>
+	</tr>
+	<tr>
+		<td>
+		
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label>Require read length greater or equal than value >=</label>
+		</td>
+		<td>
+			<input type="text" class="form-control" name="Option_l" style="width:50px;">
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label>Require read length less or equal than value <= </label>
+		</td>
+		<td>
+			<input type="text" class="form-control" name="Option_u" style="width:50px;">
+
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label>Required tri-nucleotide score <= </label>
+		</td>
+		<td>
+			<input type="text" class="form-control" name="Option_tri" style="width:50px;">
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label>Strip <int> bases from start of read before uniquifying</label>
+		</td>
+		<td>
+			<input type="text" class="form-control" name="Option_si" style="width:50px;">
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label>Strip <int> bases from start of read after uniquifying</label>
+		</td>
+		<td>
+			<input type="text" class="form-control" name="Option_dsi" style="width:50px;">
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label>No Tally, reads are output as they are processed</label>
+		</td>
+		<td>
+			<input type="checkbox" name="Option_No_Tally">
+		</td>
+	</tr>
+	
+</table>
+</form>
+
+</body>
+</html>

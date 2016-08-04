@@ -1,0 +1,62 @@
+<html>
+<head>
+<script src="js/jquery.validate.js" type="text/javascript"></script>
+<script src="js/Validacion.js"></script>
+<script src="js/Help.js"></script>
+<style>
+.Content_Menu_Izquierdo button
+{
+   width:150px;
+}
+</style>
+<script>
+var cont=0;
+function Eliminar_Elemento(Id)
+{
+   $("#Content_"+Id).remove();
+}
+function Agregar_Elemento(Nombre, Id, Script)
+{
+        $("#Content_Dinamic").append('<div class="Principal_Element" id="Content_'+Id+cont+'" style="background:green"><div class="Close_General glyphicon glyphicon-remove-sign" onclick=Eliminar_Elemento(\"'+Id+cont+'\")></div><label value="'+Script+'" >'+Nombre+'</label></div>');
+	cont++;
+}
+$(document).ready(function()
+{
+   $("#Option_Default").click(
+	function()
+   		{
+			$("#Content_Dinamic").html("");
+			$("#Cutadapt").trigger("click");
+  		});
+});
+</script>
+<body>
+	<div class="Content_Menu_Izquierdo" id="Content_Menu_Izquierdo">
+		<br>
+		<label>Please select the tools:</label>
+		<hr>
+		<button id="Cutadapt" class="btn btn-default" onClick="Agregar_Elemento('Cutadapt','Cutadapt','Cutadapt.html')">Cutadapt</button>
+		<hr>
+		<h5>FASTX-Toolkit</h5>
+		<hr>
+		<button type="button" class="btn btn-default" id="Collapser" onClick="Agregar_Elemento('Collapser','Collapser','Collapser.html')">Collapser</button><br>
+		<button id="Trimmer" class="btn btn-default" onClick="Agregar_Elemento('Trimmer','Trimmer','Trimmer.html')">Trimmer</button><br>
+		Only FastQ<br>
+		<button id="Clipper" class="btn btn-default" onClick="Agregar_Elemento('Clippler','Clipper','Clipper.html')">Clipper</button><br>
+		<button id="Quality_Filter" class="btn btn-default" onClick="Agregar_Elemento('Quality Filter','Quality_Filter','Quality_Filter.html')">Quality Filter</button><br>
+		<button id="Quality_Trimmer" class="btn btn-default" onClick="Agregar_Elemento('Quality Trimmer','Quality_Trimmer','Quality_Trimmer.html')">Quality Trimmer</button><br>
+		<button id="Quality_Masker" class="btn btn-default" onClick="Agregar_Elemento('Quality Masker','Quality_Masker','Quality_Masker.html')">Quality Masker</button><br>
+		<hr>
+		<h5>Kraken</h5>
+		<hr>
+		<button id="Reaper" class="btn btn-default" onClick="Agregar_Elemento('Reaper','Reaper','Reaper.html')">Reaper</button><br>
+		<button id="Tally" class="btn btn-default" onClick="Agregar_Elemento('Tally','Tally','Tally.html')">Tally</button><br>
+		<button id="Minion" class="btn btn-default" onClick="Agregar_Elemento('Minion','Minion','Minion.html')">Minion</button><br>
+		<br>
+		<label>Send email</label><input type="checkbox">
+		<br>
+		<button id="Option_Default">Set default</button>
+		<br>
+	</div>
+</body>
+</html>

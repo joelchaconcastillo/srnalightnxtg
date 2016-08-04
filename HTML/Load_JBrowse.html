@@ -1,0 +1,85 @@
+<html>
+	<script src="js/Validacion.js"></script>
+<style>
+.Container_JBrowse
+{
+display: inline-block;
+}
+.Main_Left_JBrowse input[type="radio"]  {
+
+}
+.JB
+{
+display: inline-block;
+}
+.Main_Left_JBrowse div
+{
+display: inline-block;
+margin: 2%:
+}
+</style>
+<script>
+$(document).ready(function () {
+	$.post("./PHP/Load_JBrowse_Server.php",{Origen:"Genomas"},function(data)
+	{
+		$("#DownList").append(data);
+	});
+	Validar_Formulario("Form_JBrowse");
+	$("#Go").click(function(e) {
+		if($("#Form_JBrowse").valid())
+		{
+					
+				Loading(true);
+					var Ruta_Genoma=$('select[name="DownList"]').val()+"?data=";
+						($("#Id").val())?Ruta_Genoma+="&loc="+$("#Id").val():Ruta_Genoma+="&loc=";
+						($("#Chr").val())?Ruta_Genoma+="&loc="+$("#Chr").val():true;
+						($("#Start").val())?Ruta_Genoma+=":"+$("#Start").val()+"..":true;
+						if($("#Start").val() && $("#End").val())Ruta_Genoma+=$("#End").val();
+						else if(!$("#Start").val() && $("#End").val())Ruta_Genoma+=":0.."+$("#End").val();
+						callIframe(Ruta_Genoma,function()
+						{
+						Loading(false,1000);
+							
+						});
+					//$("#JBrowse_frame").attr();
+					$("#JBrowse_frame").css(
+					{
+						"width":$(window).width()*3/4+"px",
+						//"padding":"10px",
+						"margin-top": "15px",
+						"height":"500px"
+					});
+					$("#JBrowse_frame").fadeIn();
+		}
+    });
+})
+function callIframe(url, callback) {
+	
+    $('#JBrowse_frame').attr('src', url);
+
+    $('#JBrowse_frame').load(function() {
+        callback(this);
+    });
+}
+</script>
+<div class="Container_JBrowse">
+	<form id="Form_JBrowse">
+		<div class="Main_Left_JBrowse">
+		<div>
+		<label>Genome:</label><br>
+		<select class="form-control" id="DownList" name="DownList" required></select>
+		</div>
+		<div style="text-align:right">
+		<label>Chr: </label><input type="text" id="Chr" size="3"><br>
+		<label>Start: </label><input type="text" id="Start" size="3"><br>
+		<label>End: </label><input type="text" id="End" size="3"><br>
+		</div>
+		<label>Id_Biology: </label><input type="text" id="Id"><br>
+		<br>
+		<br>
+		<input type="button" class="btn btn-primary" id="Go" value="Go">
+		</div>
+</form>
+<div class="JB"><iframe id="JBrowse_frame" style="display:none"></iframe></div>
+</div>
+</html>

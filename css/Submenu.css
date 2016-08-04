@@ -1,0 +1,22 @@
+#SubMenu ul
+{
+	
+text-align:center;
+//margin-right:auto;
+list-style-type:none;
+overflow:hidden;
+}
+#SubMenu li
+{
+float:left;
+display:block;
+background:#666;border-radius:25px;	
+width:200px;
+text-align:center;
+transition:background 1s;
+-webkit-transition:background 1s; /* Safari */
+
+}
+#SubMenu li:hover{background-color:#FFF;}
+#SubMenu a:link,a:visited{
+	text-decoration:none;}

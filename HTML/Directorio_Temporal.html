@@ -1,0 +1,143 @@
+<html>
+<head>
+<script src="js/Validacion.js"></script>
+<script src="js/Ventana_Consultas.js"></script>
+<script src="js/Help.js"></script>
+<style>
+.Content_Subir
+{
+	text-align:center;
+}
+</style>
+<script>
+$(document).ready(function()
+{
+	Listar_Librerias();
+	Listar_Historial();
+
+});
+function Listar_Historial()
+{
+	$.post("./PHP/Directorio_Temporal_Server.php", {Origen:"Listar_Historial"},
+	function(data)
+	{
+		$("#Contenedor_Archivos_Modelo").html(data).promise().done(
+				function(){ 
+					var table = $('#Tabla_Historial_Libreria').dataTable(
+																{   "sScrollY": ($(window).height()/2),
+																  "order": [[ 0, "desc" ]],
+																	 scrollCollapse: true,
+																	"pagingType": "full_numbers",
+																	"autoWidth": false,
+																	dom: 'T<"clear">lfrtip'	
+																});
+					
+					});
+	});
+}
+function Listar_Librerias()
+{
+	$("#Select_Listar_Librerias").html("asssssssssssss");
+	$.post("./PHP/Directorio_Temporal_Server.php", {Origen:"Listar_Librerias"},
+	function(JSON)
+	{
+		var data = "";
+		if(JSON.length ==0)
+			 data = '<option selected disabled>No files availables</option>';
+		else
+			data = '<option selected disabled>Please select the library</option>';
+			for(i=0;i<JSON.length;i++)
+			data+='<option value="'+JSON[i].Id_Libreria+'" >'+JSON[i].Nombre+'</option>';
+			$("#Select_Listar_Librerias").html(data);
+			
+	},'json');
+}
+function Mostrar_Archivos_Libreria(Element_DOM)
+{	
+	 $.post("./PHP/Directorio_Temporal_Server.php",
+		  {
+			  Origen: "Abrir_Folder_Temporal",
+			  Id_Libreria: $(Element_DOM).val()
+		  },
+		  function(ObjHTML)
+		  {
+		      $("#Archivos_Directorio").html(ObjHTML).promise().done(function(){
+				  	
+				var table = $('#Tabla_Archivos_Temporales').dataTable(
+																{   "sScrollY": ($(window).height()/2),
+																  "order": [[ 0, "desc" ]],
+																	 scrollCollapse: true,
+																	"pagingType": "full_numbers",
+																	"autoWidth": false,
+																	dom: 'T<"clear">lfrtip'	
+																});								
+			});
+			 
+		  });
+		    
+	
+}
+function Borrar_Archivo_Directorio_Temporal(Element)
+{
+	if(confirm("Do you want delete this file?"))
+	{
+		$.post("./PHP/Directorio_Temporal_Server.php",
+		{ 
+			Origen: "Borrar_Archivo",
+			Archivo: $(Element).attr("Archivo")
+		},
+		function()
+		{
+			Listar_Librerias();
+			$(Element).parent().parent().fadeOut();
+		});
+	}
+}
+function Borrar_Archivo_Historial(Element)
+{
+	if(confirm("Do you want delete this file?"))
+	{
+		$.post("./PHP/Directorio_Temporal_Server.php",
+		{ 
+			Origen: "Borrar_Archivo_Historial",
+			Archivo: $(Element).attr("Archivo"),
+			Id_Historial_Libreria : $(Element).attr("Id_Historial_Libreria")
+		},
+		function()
+		{
+			Listar_Historial();
+			$(Element).parent().parent().fadeOut();
+		});
+	}
+}
+</script>
+</head>
+<body>
+		<ul class="nav nav-tabs">
+		  <li id="tab_Consultas"  onclick="$('#Contenedor_Archivos_Modelo').attr('class','tab-pane active'); $('#Contenedor_Archivos_Temporales').attr('class','tab-pane');" class="active"><a class="btn" data-toggle="tab">Historial files</a></li>
+		  <li id="tab_Experimentos" onclick="$('#Contenedor_Archivos_Modelo').attr('class','tab-pane'); $('#Contenedor_Archivos_Temporales').attr('class','tab-pane active');"><a class="btn" data-toggle="tab">Temporal files</a></li>
+		</ul>
+		
+			<div class="panel panel-primary" style="overflow-y:auto;">
+				<div class="panel-body">
+					<div class="tab-content">
+						<div class="tab-pane active" id="Contenedor_Archivos_Modelo">
+							
+						</div>
+						<div class="tab-pane" id="Contenedor_Archivos_Temporales">
+							<div style="background:white;" id="Contenedor_Directorio_Temporal" >
+								<label>Please select the library</label>
+								<select id="Select_Listar_Librerias" class="form-control" onchange="Mostrar_Archivos_Libreria(this)" >
+									<option selected disabled>No files availables</option>
+								</select> 	
+								<div id="Archivos_Directorio" ></div> 
+							</div>
+						</div>
+						
+						
+					</div>
+				</div>
+			</div>
+
+</body>
+</html>

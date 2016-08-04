@@ -1,0 +1,155 @@
+<html>
+<head>
+<meta charset="utf-8">
+<link href="./../css/normalize.css" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="./../css/screen.css">
+<link href="./../css/bootstrap-3.1.1-dist/css/bootstrap.min.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="./../css/jquery-ui.css">
+<script src="./../js/jquery-1.9.1.min.js"></script>
+<script src="./../Add_Plugins/Recursos.js" charset="UTF-8" type="text/javascript"></script>
+
+<script src="./../js/jquery.balloon.js"></script>
+<script src="./../js/jquery-ui.js"></script>
+<script src="./../js/jquery.validate.js" type="text/javascript"></script>
+<script src="./../js/Validacion.js"></script>
+<script src="./../js/Help.js"></script>
+<script src="./../js/Autocompletar.js"></script>
+
+
+<link href="./../Add_Plugins/Recursos.css" charset="UTF-8" rel="stylesheet">
+
+<script>
+	var Information=0;
+$(document).ready(function(){
+	
+	Cargar_Usuarios_Existentes();
+	Validacion_Formulario();
+	$("#Register").click(function()
+	{
+		if($("#Formulario").valid())
+		{
+			var Formulario=$("#Formulario").serializeArray();
+			Formulario.push({ name:'Origen',value:'Agregar_Usuario'});
+			Formulario.push({name:'URL', value:location.href});
+			$.post("./../PHP/Login_Server.php",Formulario);
+			alert("We will send you a email more less on ten minutes \"from: TransciptomeGene@chacon.com\" remember check the spam.");
+			   $("#Formulario").submit();	
+		}
+		
+	});
+	
+	});
+function Validacion_Formulario()
+{
+		$( "#Formulario").validate({
+		
+	  rules: {
+		User: {
+			required: true,
+			notEqualField: "Cuenta"
+		},
+		Pass:{
+			required: true,
+			minlength: 6
+		},
+		Confirm_Pass: {
+					required: true,
+					minlength: 6,
+					equalTo: "#Pass"
+				},
+		Name: "required",
+		LastName: "required",
+		Email: {
+			required: true,
+			email: true,
+			notEqualField: "Email"
+		}
+	  },
+	showErrors: function(errorMap, errorList) 
+				{
+			 
+						$.each(this.successList, function(index, value) 
+						{
+							return $(value).popover("hide");
+						});
+						
+						return $.each(errorList, function(index, value) 
+							{
+								var _popover;
+								console.log(value.message);
+								_popover = $(value.element).popover(
+												{
+													trigger: "manual",
+													placement: "right",
+													content: value.message,
+													template: "<div class=\"popover\"><div class=\"arrow\"></div><div class=\"popover-inner\"><div class=\"popover-content\"><p></p></div></div></div>"
+												});
+												$(value.element).attr("data-content",value.message);
+								return $(value.element).popover("show");
+							});
+				}
+		});
+}
+function Cargar_Usuarios_Existentes()
+{
+	$.post("./../PHP/Login_Server.php",{Origen:"Listar_Usuarios"},
+							function(data)
+							{
+								Information=data;
+							},'json');
+				
+				jQuery.validator.addMethod("notEqualField", function(value, element, param) 
+			{
+				var Existe=true;
+				for(i=0;i<Information[param].length;i++)
+				{
+					if(Information[param][i].toUpperCase()==value.toUpperCase())
+					{
+						Existe = false;	
+					}
+				}
+					return Existe;		
+			}, "This username already exist");
+}
+</script>
+</head>
+<body>
+ <div class="page">
+     <div class="container">
+		<form id="Formulario" action="Login.html" method="post" enctype="multipart/form-data">
+		<a href="./Login.html" >Return to Login</a><br><br>
+		<div class="form-inline">
+			<label>Username</label>
+			<br>
+			<input class="form-control"  type="text" id="User" name="User"/>
+			<br>
+			<label>Pass</label>
+			<br>
+			<input class="form-control"  type="password" id="Pass" name="Pass" />
+			<br>
+			<label>Confirm Pass</label>
+			<br>
+			<input class="form-control" type="password" id="Confirm_Pass" name="Confirm_Pass" />
+			<br>
+			<label>Name(s)</label>
+			<br>
+			<input class="form-control"  type="text" name="Name" id="Name" />
+			<br>
+			<label>Last Names</label>
+			<br>
+			<input class="form-control" type="text" name="LastName" id="LastName" />
+			<br>
+			<label>Email</label>
+			<br>
+			<input class="form-control" type="text" name="Email" id="Email" />
+			<br><br>
+			<input type="button"  class="btn btn-primary" id="Register" value="Register"/>
+		</div>
+		</form>
+	</div>
+</div>
+
+</body>
+</html>

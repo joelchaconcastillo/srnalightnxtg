@@ -1,0 +1,149 @@
+<html>
+<head>
+	<!--
+<link href="css/normalize.css" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="css/screen.css">
+<link href="css/bootstrap-3.1.1-dist/css/bootstrap.min.css" rel="stylesheet">
+
+<script src="js/jquery-1.9.1.min.js"></script>
+<script src="js/jquery.balloon.js"></script>-->
+<script src="js/jquery.validate.js" type="text/javascript"></script>
+<script src="js/Validacion.js"></script>
+<script src="js/Help.js"></script>
+<style>
+.Content_Clipper label
+{
+	width:300px;
+}
+</style>
+<script>
+$(document).ready(
+function()
+{
+	$("#Flecha").click(function()
+   {
+	   var Formulario=$("#Content_Clipper").serializeArray();
+	   Formulario.push({name:'URL', value: document.URL});
+	   Formulario.push({name:'Origen', value: 'Ejecutar'});
+      $.post("./PHP/Clipper.php",Formulario ,function(data){Cargar_Logo();});
+   });
+$("#Guardar").click(function()
+   {
+	   var Formulario=$("#Content_Clipper").serializeArray();
+	   Formulario.push({name:'URL', value: document.URL});
+	   Formulario.push({name:'Origen', value: 'Guardar'});
+      $.post("./PHP/Clipper.php",Formulario ,function(data){Siguiente_Pipe();});
+   });
+});
+function Calcular_Minion(Element)
+{
+	$(Element).html('Loading <img src="./Images/ajax-loader2.gif">');
+	$(Element).attr('class','disabled btn btn-default');
+	$.post("./PHP/Cutadapt.php",{Origen: 'Minion'} ,function(data){
+		$("#Contenedor_Minion").html(data);
+		$(Element).html('Calculate adapter');
+		$(Element).attr('class','btn btn-default');
+		});
+}
+</script>
+</head>
+<body>
+<form class="Content_Clipper" id="Content_Clipper">
+	<nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#"><div class="glyphicon glyphicon-wrench"></div> Clipper</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+		<li> <a style="padding:10px; margin:5px;" class="btn btn-default" onclick="Calcular_Minion(this)" href="#">Calculate adapter</a></li>
+		<li> <a>Make graphics <input type="checkbox" id="Make_Gph" name="Make_Gph"></a></li>
+		<li> <a style="padding:10px; margin:5px;" class="btn btn-info" href="#" id="Guardar">Save</a></li>
+		<li> <a style="padding:10px; margin:5px;" class="btn btn-success" href="#" id="Flecha">Start</a></li>
+      </ul>
+     
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+<div id="Contenedor_Minion">
+</div>
+<input type="text" id="Origen" name="Origen" style="display:none;" value="Formulario">
+<table class="table table-striped active" style="display:inline-block; vertical-align:top; margin-right:100px; width:auto;" > 
+	<tr>
+			<th colspan="2">
+		FASTA/Q Clipper
+			</th>
+	</tr>
+	<tr>
+		<td>
+			<label>Adapter String (default is CCTTAAGG):</label>
+		</td>
+		<td>
+			<input type="text" class="form-control" name="Option_a" id="Option_a">
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label>Discard sequences shorter than N nucleotides (default is 5):</label>
+		</td>
+		<td>
+			<input type="text" class="form-control" style="width:50px;" name="Option_l" id="Option_l">
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label>Keep the adapter and N bases after it (using 0 is the same as not using it all. which is the default):</label>
+		</td>
+		<td>
+			<input type="text" class="form-control" style="width:50px;" name="Option_d" id="Option_d" >
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label>Discard non-clipped sequences (i.e. - keep only sequences which contained the adapter)</label>
+		</td>
+		<td>
+			<input type="checkbox" class="form-check" name="Option_c" id="Option_c">
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label>Discard clipped sequences (i.e. - keep only sequences which did not contained the adapter)</label>
+		</td>
+		<td>
+			<input type="checkbox" class="form-check" name="Option_C" id="Option_C">
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label>Report Adapter-Only sequences</label>
+		</td>
+		<td>
+			<input type="checkbox" class="form-check" name="Option_k" id="Option_k">
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label>Keep sequences with unknown (N) nucleotides (default is to discard such sequences)</label>
+		</td>
+		<td>
+			<input type="checkbox" class="form-check" name="Option_n" id="Option_n">
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label>Require minimum adapter alignment length of N. If less than N nucleotides aligned with the adapter - don't clip it:</label>
+		</td>
+		<td>
+			<input type="text" class="form-control" style="width:50px;" name="Option_M" id="Option_M" >
+		</td>
+	</tr>
+</table>
+
+</form>
+
+</body>
+</html>

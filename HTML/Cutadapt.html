@@ -1,0 +1,348 @@
+<html>
+<body>
+<script src="js/jquery.validate.js" type="text/javascript"></script>
+<script src="js/Validacion.js"></script>
+<script src="js/Help.js"></script>
+
+<style>
+.Content_Cutadapt label
+{
+	width:200px;
+}
+</style>
+<script>
+$(document).ready(function(e) {
+    Balloon_Help("Help_Option_a","Sequence of an adapter that was ligated to the 3' end.<br>The adapter itself and anything that follows is<br>trimmed.<br>Console option -a","right");
+	Balloon_Help("Help_Option_b","Sequence of an adapter that was ligated to the 5' or<br>3' end. If the adapter is found within the read or<br>overlapping the 3' end of the read, the behavior is<br>the same as for the -a option. If the adapter overlaps<br> the 5' end (beginning of the read), the initial<br>portion of the read matching the adapter is trimmed,<br>but anything that follows is kept.<br>Console option -b","right");
+	Balloon_Help("Help_Option_g"," Sequence of an adapter that was ligated to the 5' end.<br>If the adapter sequence starts with the character '^',<br>the adapter is 'anchored'. An anchored adapter must<br>appear in its entirety at the 5' end of the read (it<br>is a prefix of the read). A non-anchored adapter may<br> appear partially at the 5' end, or it may occur within<br> the read. If it is found within a read, the sequence<br> preceding the adapter is also trimmed. In all cases,<br> the adapter itself is trimmed.<br>Console option -g","right");
+	Balloon_Help("Help_Option_ERROR_RATE","Maximum allowed error rate (no. of errors divided by<br>the length of the matching region) (default: 0.1).<br>Console option -e","right");
+	Balloon_Help("Help_Option_n"," Try to remove adapters at most COUNT times. Useful<br> when an adapter gets appended multiple times (default:<br>1).<br>Console option -n","right");
+	Balloon_Help("Help_Option_O","Minimum overlap length. If the overlap between the<br>read and the adapter is shorter than LENGTH, the read<br>is not modified.This reduces the no. of bases trimmed<br>purely due to short random adapter matches (default:<br>3).<br>Console option -O","right");
+	Balloon_Help("Help_Option_Match_Read_Wildcards"," Allow 'N's in the read as matches to the adapter<br>(default: False).<br>Console option --match-read-wildcards","right");
+	Balloon_Help("Help_Option_NO_Match_Read_Wildcards"," Do not treat 'N' in the adapter sequence as wildcards.<br> This is needed when you want to search for literal 'N'<br>characters.","right");
+	Balloon_Help("Help_Option_Discard_Trimmed"," Discard reads that contain the adapter instead of<br>Atrimming them. Also use -O in order to avoid throwing<br>away too many randomly matching reads!<br>","right");
+	Balloon_Help("Help_Option_Discard_Untrimmed","Discard reads that do not contain the adapter.","right");
+	Balloon_Help("Help_Minimum_Length","Discard trimmed reads that are shorter than LENGTH.<br>Reads that are too short even before adapter removal<br> are also discarded. In colorspace, an initial primer<br> is not counted (default: 0).","right");
+	Balloon_Help("Help_Maximum_Length","Discard trimmed reads that are longer than LENGTH.<br>Reads that are too long even before adapter removal<br> are also discarded. In colorspace, an initial primer<br>is not counted (default: no limit).","right");
+	Balloon_Help("Help_Option_q","Trim low-quality ends from reads before adapter<br>removal. The algorithm is the same as the one used by<br>Bowtie (Subtract CUTOFF from all qualities; compute<br>partial sums from all indices to the end of the<br>sequence; cut sequence at the index at which the sum<br>is minimal) (default: 0)","right");
+	Balloon_Help("Help_Option_quality_base","Assume that quality values are encoded as<br>ascii(quality + QUALITY_BASE). The default (33) is<br>usually correct, except for reads produced by some<br>versions of the Illumina pipeline, where this should<br>be set to 64. (default: 33)","right");
+	
+	
+   	Balloon_Help("Help_Option_Wildcard_File"," When the adapter has wildcard bases ('N's) write<br>adapter bases matching wildcard positions to FILE","right");
+	Balloon_Help("Help_Option_Too_Short_Output","Write reads that are too short","right");
+	Balloon_Help("Help_Option_Too_Long_Output"," Write reads that are too long","right");
+	Balloon_Help("Help_Option_Untrimmed_Output","Write reads that do not contain the adapter to FILE,<br>instead of writing them to the regular output file.","right");
+
+$("#Flecha").click(function()
+   {
+	   if($("#Option_a").val() || $("#Option_b").val() || $("#Option_g").val())
+	   {
+		   var Formulario=$("#Content_Cutadapt").serializeArray();
+		   Formulario.push({name:'URL', value: document.URL});
+		   Formulario.push({name:'Origen', value: 'Ejecutar'});
+		  $.post("./PHP/Cutadapt.php",Formulario ,function(data){Cargar_Logo();});
+	  }
+	  else
+	  {
+		  alert("You need to provide at least one adapter sequence");
+	  }
+   });
+$("#Guardar").click(function()
+   {
+	   if($("#Option_a").val() || $("#Option_b").val() || $("#Option_g").val())
+	   {
+		   var Formulario=$("#Content_Cutadapt").serializeArray();
+		   Formulario.push({name:'URL', value: document.URL});
+		   Formulario.push({name:'Origen', value: 'Guardar'});
+		  $.post("./PHP/Cutadapt.php",Formulario ,function(data){Siguiente_Pipe();});
+		 }
+	  else
+	  {
+		  alert("You need to provide at least one adapter sequence");
+	  }
+   });
+   
+});
+function Calcular_Minion(Element)
+{
+	$(Element).html('Loading <img src="./Images/ajax-loader2.gif">');
+	$(Element).attr('class','disabled btn btn-default');
+	$.post("./PHP/Cutadapt.php",{Origen: 'Minion'} ,function(data){
+		$("#Contenedor_Minion").html(data);
+		$(Element).html('Calculate adapter');
+		$(Element).attr('class','btn btn-default');
+		});
+}
+</script>
+<form id="Content_Cutadapt" class="Content_Cutadapt">
+	
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#"><div class="glyphicon glyphicon-wrench"></div> Cutadapt</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+		 <li  ><a style="padding:10px; margin:5px;" class="btn btn-default" onclick="Calcular_Minion(this)" href="#">Calculate adapter</a></li>
+		 <li><a>Make graphics <input type="checkbox" id="Make_Gph" name="Make_Gph"></a></li>
+		<li  ><a style="padding:10px; margin:5px;" class="btn btn-info" id="Guardar" href="#">Save</a></li>
+		<li  ><a style="padding:10px; margin:5px;" class="btn btn-success" href="#" id="Flecha">Start</a></li>
+      </ul>
+     
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+<div id="Content" style="display:inline-block; text-align:left; ">
+	<div id="Contenedor_Minion">
+	
+	</div>
+	<table class="table">
+		<tbody style="vertical-align:top;">
+				<tr>
+				<td>
+								<table class="table table-striped active" style="display:inline-block; vertical-align:top; margin-right:100px; width:auto;" > 
+									<tr>
+									<th colspan="2">Options that influence how the adapters are found <br>(You need to provide at least one adapter sequence)</th>
+									</tr>
+									<tr>
+										<td>
+											<label>
+											<div class="glyphicon glyphicon-question-sign" id="Help_Option_a"></div>
+											Adapter 3':
+											</label>
+										</td>
+										<td>
+											<input type="text" id="Option_a" class="form-control" name="Option_a">
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<label>
+											<div class="glyphicon glyphicon-question-sign" id="Help_Option_b"></div>
+											Adapter anywhere:
+											</label>
+										</td>
+										<td>	
+											<input type="text" class="form-control" id="Option_b" name="Option_b">
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<label>
+											<div class="glyphicon glyphicon-question-sign" id="Help_Option_g"></div>
+											Adapter 5':
+											</label>
+										</td>
+										<td>	
+											<input type="text" class="form-control" id="Option_g" name="Option_g">
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<label>
+											<div class="glyphicon glyphicon-question-sign" id="Help_Option_ERROR_RATE"></div>
+											Error Rate:
+											</label>
+										</td>
+										<td>
+											<input type="text" class="form-control" id="Option_ERROR_RATE" name="Option_ERROR_RATE" style="width:80px;">
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<label>
+											<div class="glyphicon glyphicon-question-sign" id="Help_Option_n"></div>
+											Count:
+											</label>
+										</td>
+										<td>
+											<input type="text" class="form-control" id="Option_n" name="Option_n" style="width:80px;">
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<label><div class="glyphicon glyphicon-question-sign" id="Help_Option_O"></div>
+											Length:
+											</label>
+										</td>
+										<td>
+											<input type="text" class="form-control" id="Option_O" name="Option_O" style="width:80px;">
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<label><div class="glyphicon glyphicon-question-sign" id="Help_Option_Match_Read_Wildcards"></div>
+											Match Reads Wildcards
+											</label>
+										</td>
+										<td style="text-align:left;">
+										<input type="checkbox"  id="Option_Match_Read_Wildcards" name="Option_Match_Read_Wildcards">
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<label><div class="glyphicon glyphicon-question-sign" id="Help_Option_NO_Match_Read_Wildcards"></div>
+											No Match Adapter Reads Wildcards
+											</label>
+										</td>
+										<td style="text-align:left;">
+											<input type="checkbox" id="Option_NO_Match_Read_Wildcards" name="Option_NO_Match_Read_Wildcards">
+										</td>
+									</tr>
+
+								</table>
+			</td>
+			<td>
+									<table class="table table-striped" style="display:inline-block; vertical-align:top; margin-right:100px; width:auto;" > 
+										<tr>
+											<th colspan="2">Options for filtering of processed reads</th>
+										</tr>
+										<tr>
+											<td>
+												<label><div class="glyphicon glyphicon-question-sign" id="Help_Option_Discard_Trimmed"></div>
+												Discard Trimmed:
+												</label>
+											</td>
+											<td style="text-align:left;">
+												<input type="checkbox" id="Option_Discard_Trimmed" name="Option_Discard_Trimmed"><br>
+											</td>
+										</tr>
+										<tr>
+											<td>
+												<label><div class="glyphicon glyphicon-question-sign" id="Help_Option_Discard_Untrimmed"></div>
+												Discard Untrimmed:
+												</label>
+											</td>
+											<td style="text-align:left;">
+												<input type="checkbox" id="Option_Discard_Untrimmed" name="Option_Discard_Untrimmed"><br>
+											</td>
+										</tr>
+										<tr>
+											<td>
+												<label><div class="glyphicon glyphicon-question-sign" id="Help_Minimum_Length"></div>
+												Minimum Length:
+												</label>
+											</td>
+											<td>
+												<input type="text" class="form-control" id="Minimum_Length" name="Minimum_Length" value="1" size="2">
+											</td>
+										</tr>
+										<tr>
+											<td>
+												<label><div class="glyphicon glyphicon-question-sign" id="Help_Maximum_Length"></div>
+												Maximum Length:
+												</label>
+											</td>
+											<td>
+												<input type="text" class="form-control" id="Maximum_Length" name="Maximum_Length" size="2">
+											</td>
+										</tr>
+									</table>
+				</td>
+			</tr>
+			<tr>
+					<td>
+										<table class="table table-striped" style="display:inline-block; vertical-align:top; margin-right:100px; width:auto;" > 
+											<tr>
+												<th colspan="2">
+													Additional modifications to the reads
+												</th>
+											</tr>
+											<tr>
+												<td>
+													<label><div class="glyphicon glyphicon-question-sign" id="Help_Option_q"></div>
+													Cutoff:
+													</label>
+												</td>
+												<td>
+													<input type="text" id="Option_q" name="Option_q" size="2">
+												</td>
+											</tr>
+											<tr>
+												<td>
+													<label><div class="glyphicon glyphicon-question-sign" id="Help_Option_quality_base"></div>
+													Quality Base:
+													</label>
+												</td>
+												<td>
+													<input type="text" id="Option_quality_base" name="Option_quality_base" size="2" value="33">
+												</td>
+											</tr>
+											<tr>
+												<td>
+													<label><div class="glyphicon glyphicon-question-sign" id="Help_Option_quality_base"></div>
+													Double encode (Only color space):
+													</label>
+												</td>
+												<td>
+													<input type="checkbox" id="Option_double_encode" name="Option_double_encode">
+												</td>
+											</tr>
+										</table>
+					</td>
+					<td>
+											<table class="table table-striped" style="display:inline-block; vertical-align:top; margin-right:100px; width:auto;" > 
+									<tr>
+									<th colspan="2">Options that influence what gets output</th>
+									</tr>
+									<tr>
+										<td>
+											<label>
+												<div class="glyphicon glyphicon-question-sign" id="Help_Option_Wildcard_File"></div>
+												Name wilcard file:
+											</label>
+										</td>
+										<td>
+											<input type="text" name="Option_Wildcard_File" value="Wildcard" id="Option_Wildcard_File"><br>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<label>
+											<div class="glyphicon glyphicon-question-sign" id="Help_Option_Too_Short_Output"></div>
+											File Name too short reads:
+											</label>
+										</td>
+										<td>
+											<input type="text" name="Option_Too_Short_Output" value="Too_Short" id="Option_Too_Short_Output"><br>
+										</td>
+									</tr>
+									<tr>
+										<td>
+										<label>
+										<div class="glyphicon glyphicon-question-sign" id="Help_Option_Too_Long_Output"></div>
+										File Name too long reads:
+										</label>
+										</td>
+										<td>
+											<input type="text" name="Option_Too_Long_Output" value="Too_Long" id="Option_Too_Long_Output"><br>
+										</td>
+									</tr>
+									<tr>
+									<td>
+										<label>
+										<div class="glyphicon glyphicon-question-sign" id="Help_Option_Untrimmed_Output"></div>
+										File Name untrimmed reads:
+										</label>
+									</td>
+									<td>
+										<input type="text" name="Option_Untrimmed_Output" value="Untrimmed" id="Option_Untrimmed_Output"><br>
+									</td>
+									</tr>
+								</table>
+					</td>
+			</tr>
+	</tbody>
+</table>
+<label style="width:600px">Note:<br> If the input sequences are in color space, the adapter
+can be given in either color space (as a string of digits 0, 1, 2, 3) or in
+nucleotide space.
+</label>
+<br>
+</div>
+</form>
+</body>
+</html>

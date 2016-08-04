@@ -1,0 +1,637 @@
+
+
+<style>
+.Contenedor_Procesos
+{
+	width:80%;
+	border: solid 1px;
+}
+.Boton_Contenedor_Procesos
+{
+	
+}
+.Elemento_Alertas
+{
+	cursor:pointer; 
+	margin:2px;
+	padding:4px;
+}
+.Elemento_Alertas:hover
+{
+		-webkit-box-shadow: inset 10px 0px 0px -8px rgba(0,0,0,0.75);
+-moz-box-shadow: inset 10px 0px 0px -8px rgba(0,0,0,0.75);
+box-shadow: inset 10px 0px 0px -8px rgba(0,0,0,0.75);
+}
+</style>
+
+<script>
+$(document).ready(function(e) {
+	
+	Posicionar_Contenedor_Procesos();
+//$(".Contenedor_Procesos").css({'left':'600px'});
+  setInterval(function(){
+     Cargar_Procesos();
+	},3000);
+  
+   
+});
+function Posicionar_Contenedor_Procesos()
+{
+	$(".Contenedor_Procesos").css
+	({ "position":"fixed",
+		"right":"-"+$(this).width()+"px",
+		"display":"none"
+	});
+}
+function Cargar_Procesos()
+{
+	
+	//Alarma 
+	 $.post("./PHP/Procesos_Derecho_Server.php",
+	   {
+		Origen:"Revisar_Cambios"
+	   },function(JSON)
+ 	    {		
+			if(JSON.Numero_Procesos_Listos > 0)
+			{
+					$("#Alerta_Menu").html(JSON.Numero_Procesos_Listos).css("color","#c9302c");
+			}
+			else
+				$("#Alerta_Menu").html("").css("color","#999");
+ 	    },'json');    
+ 	    
+	 $.post("./PHP/Consulta_Server.php",
+	   {
+		Origen:"Revisar_Cambios_Consultas"
+	   },function(JSON)
+ 	    {		
+			if(JSON.Numero_Consultas_Listos > 0)
+			{
+					$("#Alerta_Menu").html(JSON.Numero_Consultas_Listos).css("color","#c9302c");
+			}
+			else
+				$("#Alerta_Menu").html("").css("color","#999");
+ 	    },'json');    
+
+     $.post("./PHP/Procesos_Derecho_Server.php",
+	   {
+		Origen:"Cargar_Procesos"
+	   },function(Object)
+ 	    {
+            Generar_Tabla_Herramientas(Object);
+ 	    },'json');
+ 	    
+ 	   $.post("./PHP/Procesos_Derecho_Server.php",
+	   {
+		Origen:"Cargar_Procesos_MySQL"
+	   },function(Object)
+ 	    {
+            Generar_Tabla_MySQL(Object);
+ 	    },'json');
+}
+function Estado_Email(Element)
+{
+	 $.post("./PHP/Procesos_Derecho_Server.php",
+	   {
+			Origen:"Actualizar_Enviar_Correo",
+			Id_HTOP: $(Element).attr('Id_HTOP'),
+			Enviar: ($(Element).prop('checked'))?1:0
+	   });
+}
+function Cargar_Flujo(Element)
+{
+	$.post("./PHP/Procesos_Derecho_Server.php",
+		{
+			Origen:"Consultar_Flujo",
+			Id_HTOP: $(Element).attr('Id_HTOP')
+		},function(JSON)
+		{
+			var data="";
+			var tabla='<table class="table table-striped active" style="display:inline-block; vertical-align:top; margin:auto; width:auto;" > ';
+			tabla+="<tr><th>Library</th><td>"+JSON[0].Nombre+"</td></tr>"
+			tabla+="<tr><th>Keywords</th><td>"+JSON[0].Palabras_Clave+"</td></tr>"
+			tabla+="<tr><th>Tissue</th><td>"+JSON[0].Tejido+"</td></tr>"
+			tabla+="<tr><th>Sequence platform</th><td>"+JSON[0].Plataforma+"</td></tr>"
+			tabla+="<tr><th>Protocol</th><td>"+JSON[0].Descripcion+"</td></tr>"
+			tabla+="<tr><th>Start Date</th><td>"+JSON[0].Fecha+"</td></tr>"
+			tabla+="<tr><th>status</th><td>"+JSON[0].Nombre+"</td></tr>"
+			if(JSON[0].Activo=="1")
+			tabla+="<tr><th>status</th><td style='color:red'>Processing <img src='./Images/ajax-loader2.gif'></tr>"
+			if(JSON[0].Activo=="2")
+			tabla+="<tr><th>status</th><td style='color:red'>Error</tr>"
+			else
+			tabla+="<tr><th>status</th><td style='color:green'>Ready</tr>"
+			tabla+="<tr><th>Name Step</th><td>"+JSON[0].Nombre+"</td></tr>"
+			tabla+="</table>";
+			data='<ul class="nav nav-tabs">'
+			for(i=0; i < JSON.length; i++)
+			{
+				
+				if( i+1 == JSON[i].Numero_Pipe_Actual)
+				{
+					if(JSON[i].Stdout)
+					data+=" <div class='btn btn-danger' data-toggle='modal' data-target='#Modal_Reporte' onclick=\"Agregar_Contenido('"+JSON[i].Stdout+"')\" >"+JSON[i].Comando+"</div>";
+					else
+					data+=" <div class='btn btn-danger' >"+JSON[i].Comando+"</div>";
+
+				
+				}
+				else
+				{
+					if(JSON[i].Stdout)
+					data+=" <div class='btn btn-primary' data-toggle='modal' data-target='#Modal_Reporte' onclick=\"Agregar_Contenido('"+JSON[i].Stdout+"')\" >"+JSON[i].Comando+"</div>";
+					else
+					data+=" <div class='btn btn-primary''>"+JSON[i].Comando+"</div>";
+
+				}
+				
+			}
+			var btn_Restart=""
+			if(JSON[0].Activo=="0" || JSON[0].Activo=="2" )
+			btn_Restart= '<input type="button"  Id_HTOP="'+$(Element).attr('Id_HTOP')+'" Id_Libreria = "'+JSON[0].Id_Libreria+'" onclick="Reiniciar_PIPE(this)" class="btn btn-primary" value="Reset flow process">';
+			$("#Contenedor_Flujo").html(data+'<br>'+tabla+'<br>'+btn_Restart);
+			
+		}, 'json');
+	
+}
+function Agregar_Contenido(Contenido)
+{
+	$("#Content_Stdout").html(Contenido);
+}
+function Reiniciar_PIPE(Element)
+{
+	if(confirm("Do you want reset this flow process ?"))
+	{
+		$.post("./PHP/Procesos_Derecho_Server.php",
+			{
+				Origen :"Reiniciar_PIPE",
+				Id_HTOP : $(Element).attr('Id_HTOP'),
+				Id_Libreria : $(Element).attr('Id_Libreria')
+			},function(data)
+			{
+				Cargar_Flujo(Element);
+			});
+	}
+}
+function Generar_Tabla_Herramientas(Object)
+{
+	var Alarmas="";
+	var Tabla="";
+	/*Tabla+='<table id="Tabla_Procesos" style="text-align:center; vertical-align:middle;" cellpadding="0" cellspacing="0" border="0" id="Tabla" class="table display table-hover"  >';
+	Tabla+='<thead><tr><th>Action</th></th><th>Library Name</th><th>Name Step</th><th>Step</th><th>Status</th></th><th>Start Date</th><th>Key Words</th><th>Tissue</th><th>Sequence Platform</th><th>Description</th></th><th>Institution</th><th></th></tr></thead>';
+	Tabla+='<tbody>';*/
+	if(!Object.length) Alarmas ='<li>No process availables</li>';
+	for(i=0;i<Object.length;i++)
+	{
+		
+		if( Object[i].Ventana_Abierta =="1")
+		{
+				if(Object[i].Activo=="0")
+				{
+					Alarmas+='  <li class="Elemento_Alertas" onclick="Abrir_Proceso(\''+Object[i].Id_HTOP+'\')">';
+					Alarmas+=' <span class="label label-success">Ready</span><br>'+Object[i].Nombre;
+				
+				}
+				else if(Object[i].Activo=="2")
+				{
+					Alarmas+='  <li class="Elemento_Alertas" onclick="Abrir_Proceso(\''+Object[i].Id_HTOP+'\')">';
+					Alarmas+=' <span class="label label-danger">Error</span><br>'+Object[i].Nombre;
+				}
+				Alarmas+= "  </li>";
+		}
+	
+		
+		Tabla+='<tr >';
+		if(Object[i].Activo=="1")
+		Tabla+='<td style="padding:1px;"><button type="button" onclick="Abrir_Proceso(\''+Object[i].Id_HTOP+'\')" class="btn btn-success disabled">Open</button></td>';
+		else
+		Tabla+='<td style="padding:1px;"><button type="button" onclick="Abrir_Proceso(\''+Object[i].Id_HTOP+'\')" class="btn btn-success">Open</button></td>';
+		Tabla+='<td>'+Object[i].Nombre+'</td>';
+		Tabla+='<td>'+Object[i].Comando+'</td>';
+		Tabla+='<td>'+Object[i].Numero_Pipe_Actual+' of '+Object[i].Numero_Pipes+'</td>';
+		if(Object[i].Activo=="1")
+		Tabla+='<td style="color:red">Processing <img src="./Images/ajax-loader2.gif"></td>';
+		else if(Object[i].Activo=="2")
+		Tabla+='<td style="color:red">Error</td>';
+		else
+		Tabla+='<td style="color:green">Ready</td>';
+		Tabla+='<td>'+Object[i].Fecha+'</td>';
+	/*	Tabla+='<td>'+Object[i].Palabras_Clave+'</td>';
+		Tabla+='<td>'+Object[i].Tejido+'</td>';
+		Tabla+='<td>'+Object[i].Plataforma+'</td>';
+		Tabla+='<td>'+Object[i].Descripcion+'</td>';
+		Tabla+='<td>'+Object[i].Institucion+'</td>';*/
+		if(Object[i].Enviar_Email == 1)
+		Tabla+='<td><input type="checkbox" Id_HTOP="'+Object[i].Id_HTOP+'" onchange="Estado_Email(this)" checked></td>';
+		else
+		Tabla+='<td><input type="checkbox" Id_HTOP="'+Object[i].Id_HTOP+'" onchange="Estado_Email(this)"></td>';
+		Tabla+='<td style="padding:1px;"><input type="button"  class="btn btn-primary" Id_HTOP="'+Object[i].Id_HTOP+'" value="More" data-toggle="modal" onclick="Cargar_Flujo(this)" data-target="#Modal_Flujo"></td>';
+		//if(Object[i].Mostrar_Reporte == "1" && Object[i].Script == "Bowtie.html")
+		//Tabla+='<td style="padding:1px;"  ><button type="button" Id_HTOP="'+Object[i].Id_HTOP+'" onclick="Cancelar_Procesos_Bowtie(this)" class="btn btn-primary">End flow process</button></td>';
+		//else
+		Tabla+='<td style="padding:1px;"  ><button type="button" Id_HTOP="'+Object[i].Id_HTOP+'" onclick="Cancelar_Proceso(this)" class="btn btn-danger">Cancel</button></td>';
+		
+		Tabla+='</tr>';
+		
+		
+	}
+	/*Tabla+='</tbody>';
+	Tabla+='</table>';*/
+	$("#Tbody_Procesos").html(Tabla).promise().done(function()
+	{
+	/*	var table2 = $('#Tabla_Procesos').dataTable(
+						{  
+						  "order": [[ 0, "desc" ]],
+						"columnDefs": [
+								{ "width": "50", "targets": "1" }
+							  ],
+							 scrollY:"300px",
+							 scrollX:"700px",
+							
+							 scrollCollapse: true,
+							"pagingType": "full_numbers",
+							"autoWidth": false,
+							dom: 'T<"clear">lfrtip',	
+					    } 
+			           );
+					  
+						/*var oFC = new $.fn.dataTable.FixedColumns( table2, {
+																		leftColumns: 1,
+																		rightColumns: 1
+																	} );*/
+				
+	});
+	$("#Contenedor_Alertas").html(Alarmas);
+	
+	
+}
+function Diferencia_fecha(Inicio, Fin)
+{
+	
+		var fechaResta= Fin-Inicio;
+		var Dias=((((fechaResta/1000)/60)/60)/24);  
+
+		var Horas=  Dias*24;
+		var Minutos= Horas * 60;
+		var Segundos= (Minutos-parseInt(Minutos)) * 60;
+		Dias=parseInt(Dias);
+		Horas=parseInt(Horas);
+		Minutos=parseInt(Minutos);
+		Segundos=parseInt(Segundos);
+	    var JSON=
+	    {
+			"Dias": Dias,
+			"Horas": Horas,
+			"Minutos": Minutos,
+			"Segundos": Segundos
+		};
+		return JSON;
+}
+function Generar_Tabla_MySQL(Object)
+{
+	
+	var Tabla="";
+	/*Tabla+='<table id="Tabla_Procesos_MySQL" style="text-align:center; vertical-align:middle;" cellpadding="0" cellspacing="0" border="0" id="Tabla" class="table display table-hover"  >';
+	Tabla+='<thead><tr><th>Action</th></th><th>Name</th><th>Elapsed Time</th><th>Description</th><th>State</th></th><th>Start Date</th><th></th></tr></thead>';
+	Tabla+='<tbody>';*/
+	var Alarmas="";
+	if(!Object.length) Alarmas ='<li>No process availables</li>';
+	for(i=0;i<Object.length;i++)
+	{
+		var d = new Date();	
+		var Start= new Date(Object[i].Fecha_Ejecucion);
+		var End = new Date(Object[i].Fecha_Termino);
+		var Now= new Date(d.getFullYear()+ "-" + (d.getMonth() + 1 ) + "-" + d.getDate() + " " + d.getHours() + ":" + d.getMinutes()+":"+d.getSeconds());
+	    
+	    var Obj=Diferencia_fecha(Start, End);
+	    var ObjNow=Diferencia_fecha(Start, Now);
+	    // var fechaResta= End-Start;
+	  
+	      
+	     if( Object[i].Ventana_Abierta =="1")
+		{
+
+				//if(Object[i].Activo=="0")
+				//{
+					Alarmas+='  <li class="Elemento_Alertas" onclick="Borrar_Ventana_Abierta_Query(\''+Object[i].Id_Query+'\');">';
+					Alarmas+=' <span class="label label-success">Ready</span><br>'+Object[i].Nombre;
+				
+				/*}
+				else if(Object[i].Activo=="2")
+				{
+					Alarmas+='  <li class="Elemento_Alertas" onclick="Control_Visual_Contenedor_Procesos()">';
+					Alarmas+=' <span class="label label-danger">Error</span><br>'+Object[i].Nombre;
+				}*/
+				Alarmas+= "  </li>";
+		} 
+	     
+	     
+	     
+	      
+		Tabla+='<tr >';
+		if(Object[i].TIME != null)
+		Tabla+='<td><img src="./Images/ajax-loader2.gif"></td>';
+		else
+		Tabla+='<td style="padding:1px;"><button type="button" Archivo ="./../Consultas/'+Object[i].Archivo+'" Id_Query="'+Object[i].Id_Query+'" onclick="Descargar_Archivo(this)" class="btn btn-success">Download</button></td>';
+		if(Object[i].TIME != null)
+		Tabla+='<td style="padding:1px;"><button type="button" onclick="Gestor_Texto(\''+Object[i].Id_Query+'\')" class="btn btn-primary disabled">Text Browse</button></td>';
+		else
+		Tabla+='<td style="padding:1px;"><button type="button" onclick="Mostrar_Ventana_Archivo(\''+Object[i].Archivo+'\')" class="btn btn-primary">Text Browse</button></td>';
+		
+		Tabla+='<td>'+Object[i].Nombre+'</td>';
+		if(Object[i].TIME != null)
+		Tabla+='<td style="color:red;">Days: '+ObjNow.Dias+' Hours: '+ObjNow.Horas+' Min: '+ObjNow.Minutos+' Sec: '+ObjNow.Segundos+' </td>';
+		//Tabla+='<td>'+Object[i].TIME+'</td>';
+		else
+		Tabla+='<td style="color:green;">Days: '+Obj.Dias+' Hours: '+Obj.Horas+' Min: '+Obj.Minutos+' Sec: '+Obj.Segundos+' </td>';
+		Tabla+='<td>'+Object[i].Descripcion+'</td>';
+		if(Object[i].TIME != null)
+		Tabla+='<td style="color:red;">Processing</td>';
+		else
+		Tabla+='<td style="color:green;">Ready</td>';
+		Tabla+='<td>'+Object[i].Fecha_Ejecucion+'</td>';
+	
+		Tabla+='<td style="padding:1px;"  ><button type="button" Id_Query="'+Object[i].Id_Query+'" onclick="Cancelar_Consulta(this)" class="btn btn-danger">Remove</button></td>';
+		
+		Tabla+='</tr>';
+	}/*
+	Tabla+='</tbody>';
+	Tabla+='</table>';*/
+	
+	$("#Tbody_Procesos_MySQL").html(Tabla).promise().done(function()
+	{
+		
+					 
+		/*var table2 = $('#Tabla_Procesos_MySQL').dataTable(
+						{  
+						  "order": [[ 0, "desc" ]],
+						"columnDefs": [
+								{ "width": "50", "targets": "1" }
+							  ],
+							 scrollY:"300px",
+							 scrollX:"700px",
+							
+							 scrollCollapse: true,
+							"pagingType": "full_numbers",
+							"autoWidth": false,
+							dom: 'T<"clear">lfrtip',	
+					    } 
+			           );
+					   $("th").css('text-align','center');
+					   $("th").css('vertical-align','middle');
+					   $("td").css('text-align','center');
+					   $("td").css('vertical-align','middle');
+						/*var oFC = new $.fn.dataTable.FixedColumns( table2, {
+																		leftColumns: 1,
+																		rightColumns: 1
+																	} );*/
+				
+	});
+	$("#Contenedor_Consultas").html(Alarmas);
+	
+		
+}
+function Control_Visual_Contenedor_Procesos()
+{
+	Cargar_Procesos();
+	 if($(".Contenedor_Procesos").is(":visible"))
+		 {
+			  $(".Contenedor_Procesos").animate({right:"-"+$(".Contenedor_Procesos").width()+"px"},
+			  function(){$(this).hide();});
+		 }
+		 else
+		 {
+			  $(".Contenedor_Procesos").show().animate({right:'30px'});
+			
+		 }
+}
+function Abrir_Contenedor_Visual_Procesos()
+{
+	Cargar_Procesos();
+	$(".Contenedor_Procesos").show().animate({right:'30px'});
+}
+function Cerrar_Contenedor_Visual_Procesos()
+{
+	$(".Contenedor_Procesos").animate({right:"-"+$(".Contenedor_Procesos").width()+"px"},
+			  function(){$(this).hide();});
+}
+function Cancelar_Proceso(Element)
+{
+	if(confirm("Do you want remove this pipeline process?"))
+	{
+	  $.post("./PHP/Procesos_Derecho_Server.php",
+			{ 
+			   Origen:"Eliminar_Proceso",
+			   Id_HTOP:$(Element).attr("Id_HTOP")
+			 },
+			function(Object)
+			{
+			   //$("#Panel_Central").load("./HTML/"+Object.Script);
+			   //Control_Visual_Contenedor_Procesos();
+			   Cargar_Procesos();
+			});
+	}
+}
+function Cancelar_Consulta(Element)
+{
+	if(confirm("Do you want remove this query?"))
+	{
+		 $.post("./PHP/Procesos_Derecho_Server.php",
+			{ 
+			   Origen:"Cancelar_Consulta",
+			   Id_Query:$(Element).attr("Id_Query")
+			 },
+			function(Object)
+			{
+			   //$("#Panel_Central").load("./HTML/"+Object.Script);
+			   //Control_Visual_Contenedor_Procesos();
+			   Cargar_Procesos();
+			});
+	}
+}
+function Abrir_Proceso(Id_HTOP)
+{
+       $.post("./PHP/Procesos_Derecho_Server.php",
+		{ 
+		   Origen:"Sesion_Datos",
+		   Id_HTOP:Id_HTOP
+		 },
+		function(Object)
+		{
+		   if(Object.Mostrar_Reporte=="0")
+		      $("#Panel_Central").load("./HTML/"+Object.Script);
+		   else
+		   {
+		     if(Object.Script=="Bowtie.html")
+		      $("#Panel_Central").load("./HTML/Reporte_Bowtie.html");
+		      else
+		      $("#Panel_Central").load("./HTML/Reporte.html");
+		   }
+		   Cerrar_Contenedor_Visual_Procesos();
+	    },'json');
+}
+function Siguiente_Pipe()
+{		
+	$.post("./PHP/Procesos_Derecho_Server.php",
+		{ 
+		   Origen:"Proceso_Siguiente"
+		 },
+		function(Object)
+		{
+		  Abrir_Proceso(Object.Id_HTOP);
+	    },'json');
+}
+function Mostrar_Herramientas()
+{
+	$("#tab_Consultas").attr("class","");
+					$("#tab_Experimentos").attr("class","active");  
+					
+					$("#Contenido_MySQL").attr("class","tab-pane");
+					$("#Contenido_Herramientas").attr("class","tab-pane active");  
+}
+function Mostrar_Consultas()
+{
+	$("#tab_Experimentos").attr("class",""); 
+					$("#tab_Consultas").attr("class","active");
+					
+					$("#Contenido_Herramientas").attr("class","tab-pane");
+					$("#Contenido_MySQL").attr("class","tab-pane active");  
+}
+function Finalizar_Procesos()
+{
+	if(confirm("Do you want cancel this result section? "))
+	{
+	  $.post("./PHP/Procesos_Derecho_Server.php",
+			{ 
+			   Origen:"Finalizar_Procesos"
+			 },
+			function(JSON)
+			{
+			   //$("#Panel_Central").load("./HTML/"+Object.Script);
+			   //Control_Visual_Contenedor_Procesos();
+			
+			   Cargar_Procesos();
+				Cambiar('./HTML/Modificar_Librerias.html');
+
+			},'json');
+	}
+}
+function Descargar_Archivo_Query(Element)
+{
+	$(Element).html('<label style="color:blue;">Compressing file </label> <img src="./Images/ajax-loader2.gif">');
+	$(Element).attr('class','btn btn-default disabled');
+	$.post("./PHP/Procesos_Derecho_Server.php",
+		{ 
+			Origen: "Descargar_Archivo_Query",
+			Id_Query: $(Element).attr('Id_Query')
+		},
+		function(JSON)
+		{
+			setTimeout("location.href='./Consultas/"+JSON.Comprimido+"'", 0);
+			$(Element).attr('class','btn btn-success');
+			$(Element).html('Download');
+		},'json');
+}
+function Descargar_Archivo(Element)
+{
+	$(Element).html('<label style="color:blue;">Compressing file </label> <img src="./Images/ajax-loader2.gif">');
+	$(Element).attr('class','btn btn-default disabled');
+	$.post("./PHP/Procesos_Derecho_Server.php",
+		{ 
+			Origen: "Descargar_Archivo",
+			Archivo: $(Element).attr('Archivo')
+		},
+		function(JSON)
+		{
+			setTimeout("location.href='"+JSON.Archivo_Comprimido+"'", 0);
+			$(Element).attr('class','btn btn-success');
+			$(Element).html('Download');
+		},'json');
+}
+</script>
+<div id="Procesos_Desactivado" class="btn-success"></div>
+<div class="Contenedor_Procesos" style="top:50px; margin:10px; background:white;">
+	<div class="btn btn-primary" style="position:absolute; left:0px;" onclick="Control_Visual_Contenedor_Procesos()">
+	  <div class="glyphicon glyphicon-eye-close" ></div>
+	   Hide
+	</div>
+  <div class="panel panel-default">
+        <div style="text-align:center;"class="panel-heading">
+			<h4>Estate Process</h4>
+		</div>
+	<div class="panel-body">
+		<div   id="Menu_Experimentos">
+			
+				<ul class="nav nav-tabs">
+				  <li id="tab_Experimentos" onclick="Mostrar_Herramientas();" class="active"><a class="btn" data-toggle="tab">Tools</a></li>
+				  <li id="tab_Consultas"  onclick="Mostrar_Consultas();"><a class="btn" data-toggle="tab">BD</a></li>
+				</ul>
+				
+				
+				<div class="tab-content">
+				  <div class="tab-pane active" id="Contenido_Herramientas">
+				  
+					<table id="Tabla_Procesos"  style="text-align:center; vertical-align:middle;" cellpadding="0" cellspacing="0" border="0" id="Tabla" class="table display table-hover"  >
+					<thead><tr><th>Action</th></th><th>Library Name</th><th>Name Step</th><th>Step</th><th>Status</th></th><th>Start Date</th><th>Email</th><th></th><th></th></tr></thead>
+					<!--<thead><tr><th>Action</th></th><th>Library Name</th><th>Name Step</th><th>Step</th><th>Status</th></th><th>Start Date</th><th>Key Words</th><th>Tissue</th><th>Sequence Platform</th><th>Description</th></th><th>Institution</th><th>Email</th><th></th></tr></thead>-->
+					<tbody id="Tbody_Procesos">
+					</tbody>
+					</table>
+				  
+				  </div>
+				  <div class="tab-pane" id="Contenido_MySQL">
+				  
+					<table id="Tabla_Procesos_MySQL" style="text-align:center; vertical-align:middle;" cellpadding="0" cellspacing="0" border="0" id="Tabla" class="table display table-hover"  >
+					<thead><tr><th>Action</th><th>Show</th></th><th>Name</th><th>Elapsed Time</th><th>Description</th><th>State</th></th><th>Start Date</th><th></th></tr></thead>
+					<tbody id="Tbody_Procesos_MySQL">
+					</tbody>
+					</table>
+				  
+				  
+				  </div>
+				</div>
+		</div>
+	</div>
+</div>
+</div>
+
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="Modal_Flujo" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">Flow</h4>
+      </div>
+      <div class="modal-body">
+        <label>The <span style="color:#d2322d;">red</span> element is the actual process </label>
+        <div id="Contenedor_Flujo"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+	<!-- Modal -->
+				<div class="modal fade" id="Modal_Reporte" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				  <div class="modal-dialog">
+					<div class="modal-content">
+					  <div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+						<h4 class="modal-title" id="myModalLabel">Reports</h4>
+					  </div>
+					  <div class="modal-body">
+						  <h3>Standart Out</h3>
+						<div style="height:200px; overflow-y:auto;" id="Content_Stdout"></div>
+						
+					  <div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					  </div>
+					</div>
+				  </div>
+				</div>

@@ -1,0 +1,180 @@
+<html>
+<head> 
+<style>
+	#Formulario td
+{
+	padding: 5px;
+}
+</style>
+<script src="./bootbox/bootbox-master/bootbox.js"></script>
+<script src="js/Help.js"></script>
+
+<script>
+$(document).ready(function(e) {
+	Validar_Formulario("Formulario");
+	Llenar_Controles();
+
+});
+function Llenar_Controles()
+{
+	$.post("./PHP/Perfil.php",
+	{
+		Origen: 'Consultar_Informacion'
+	},function(Object)
+	{
+		$("#Cuenta").val(Object.Cuenta);
+		$("#Nombre").val(Object.Nombre);
+		$("#Apellido").val(Object.Apellido);
+		$("#Email").val(Object.Email);
+	},'json');
+}
+function Enviar_Informacion()
+{
+	if($("#Formulario").valid())
+	{
+		var Formulario = $("#Formulario").serializeArray();
+		Formulario.push({name:'Origen', value: 'Actualizar_Informacion'});
+		$.post('./PHP/Perfil.php',Formulario,
+		function(data)
+		{
+			Llenar_Controles();
+
+			bootbox.confirm("<div style='text-align:center; width:80%; margin:auto;' class='alert alert-warning'>Your information were changed.<br> Do you want reload the page?</div>", function(result) {
+								if(result)
+									location.reload();
+					}); 
+		});
+	}
+}
+function Actualizar_Pass()
+{
+	
+	var Content = '<form id="SubForm"> <label class="label-control">Please insert the actual pass:</label><input type="password" name="Actual_Pass" id="Actual_Pass" required class="form-control"><label class="label-control">Please insert the new pass</label><input type="password" id ="Pass" name="Pass" required minlength="6" class="form-control"><label class="label-control">Please confirm the new pass</label><input type="password" equalTo="#Pass" id="Confirm_Pass" name="Confirm_Pass" required class="form-control"> </form>';
+		bootbox.dialog({
+	  message: Content,
+	  title: "<div style='text-align:center; width:80%; margin:auto;' class='alert alert-warning'>Please confirm the information</div>",
+	  buttons: {
+		success: {
+		  label: "Save",
+		  className: "btn-success",
+		  callback: function() {
+			 Validar_Formulario("SubForm");
+				/*$( "#SubForm").validate({
+		
+						  rules: {
+							User: {
+								required: true,
+								notEqualField: "Cuenta"
+							},
+							Pass:{
+								required: true,
+								minlength: 6
+							},
+							Confirm_Pass: {
+										required: true,
+										minlength: 6,
+										equalTo: "#Pass"
+									}
+				}});*/
+				 
+			if($("#SubForm").valid())
+			{
+				$.post("./PHP/Perfil.php",
+				{
+					Origen: 'Actualizar_Pass',
+					Pass: $("#Pass").val(),
+					Actual_Pass : $("#Actual_Pass").val()
+				},
+				function(Object)
+				{
+					if(Object.Cambio)
+					bootbox.alert("<div style='text-align:center; width:80%; margin:auto;' class='alert alert-success'>The password was changed</div>");
+					else
+					bootbox.alert("<div style='text-align:center; width:80%; margin:auto;' class='alert alert-danger'>The actual password is incorrect</div>");
+				},'json');
+			}
+			else
+			return false;  
+			
+		  }
+		},
+		danger: {
+		  label: "Cancel",
+		  className: "btn-default",
+		  callback: function() {
+			
+		  }
+		},
+	  }
+	});
+}
+</script>
+</head>
+
+<body>
+  <form id="Formulario">	
+	  
+	  <blockquote>
+		Profile
+	  <footer></footer>
+	</blockquote>
+	
+	  
+	<nav class="navbar navbar-default" role="navigation">
+		
+	<div class="container-fluid">
+	  
+	<!-- Brand and toggle get grouped for better mobile display -->
+	<div class="navbar-header">
+	  <a class="navbar-brand" href="#"><div class="fa fa-user"></div> Information</a>
+	</div>
+
+	<!-- Collect the nav links, forms, and other content for toggling -->
+	<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+	  <ul class="nav navbar-nav">    
+		<li  ><a style="padding:10px; margin:5px;" class="btn btn-default" onclick="Enviar_Informacion();" href="#" id="btn_Send">Update information</a></li>
+		<li  ><a style="padding:10px; margin:5px;" class="btn btn-default" onclick="Actualizar_Pass();" href="#" id="btn_Send">Update Pass</a></li>
+	  </ul>
+	 
+	</div><!-- /.navbar-collapse -->
+	</div><!-- /.container-fluid -->
+	</nav>
+
+	<!--body form display--->
+
+	<div class="well">
+		<table class="table-striped" style="width:100%;">
+			<tr>
+				<th>Account</th>
+				<td>
+					<input type="text" required id="Cuenta" name="Cuenta" class="form-control">
+				</td>
+			</tr>
+			<tr>
+				<th>Name</th>
+				<td>
+					<input type="text" required id="Nombre" name="Nombre" class="form-control">
+				</td>
+			</tr>
+			<tr>
+				<th>Last Name</th>
+				<td>
+					<input type="text" required id="Apellido" name="Apellido" class="form-control">
+				</td>
+			</tr>
+			<tr>
+				<th>Email</th>
+				<td>
+					<input type="email" required id="Email" name="Email" class="form-control">
+				</td>
+			</tr>
+		
+		</table>
+	</div>
+	
+	<!--/.body form --->
+    </form>  
+  
+  
+</body>
+</html>

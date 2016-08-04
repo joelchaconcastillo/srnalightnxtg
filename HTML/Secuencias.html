@@ -1,0 +1,155 @@
+<html>
+<head> 
+<style>
+	#Formulario td
+{
+	padding: 5px;
+}
+</style>
+<script src="./bootbox/bootbox-master/bootbox.js"></script>
+<script src="js/Help.js"></script>
+
+<script>
+$(document).ready(function(e) {
+	Validar_Formulario("Formulario");
+	Librerias_Disponibles();
+});
+function Enviar_Consuta()
+{
+	if($("#Formulario").valid())
+	{
+					bootbox.dialog({
+				  message: '<form id="SubForm"><label class="control-label">Name of query: </label><br><input type="text" required style="width:250px;" class="form-control" id="Nombre"><br><label class="control-label">Description: </label><br><textarea class="form-control required" placement="top" id="Descripcion" name="Descripcion" required></textarea></form>',
+				  title: "Please give the information",
+				  buttons: {
+					success: {
+					  label: "Send",
+					  className: "btn-success",
+					  callback: function() {
+						  Validar_Formulario('SubForm');
+						  if($("#SubForm").valid()){
+							  
+							var Formulario = $("#Formulario").serializeArray();
+							Formulario.push({name:'Origen', value:'Realizar_Consulta_Secuencia_Especial'});
+							Formulario.push({name:'txt_Nombre', value:$("#Nombre").val() });
+							Formulario.push({name:'txt_Descripcion', value: $("#Descripcion").val() });
+							$.post("./PHP/Consulta_Server.php",Formulario, function(data)
+							{
+								Dialogo_Instrucciones();
+								});
+		  }
+			  else
+			  return false;
+
+					  }
+					},
+					danger: {
+					  label: "Cancel",
+					  className: "btn-danger"
+					}
+				  }
+				});
+		}
+				
+	
+}
+function Limpiar_Formulario()
+{
+		$("#Formulario * :text").val("");
+		$("#Formulario * select").prop('selectedIndex', 0);   
+
+}
+function Librerias_Disponibles()
+{
+	
+	$.post("./PHP/Consulta_Server.php",
+	{
+		Origen:"Librerias_Disponibles"
+	},function(data)
+	{
+		$("#Informacion_Libreria").html(data);
+	});
+}
+
+</script>
+</head>
+
+<body>
+  <form id="Formulario">	
+	  
+	  <blockquote>
+		By sequence
+	  <footer></footer>
+	</blockquote>
+	
+	  
+	<nav class="navbar navbar-default" role="navigation">
+		
+	<div class="container-fluid">
+	  
+	<!-- Brand and toggle get grouped for better mobile display -->
+	<div class="navbar-header">
+	  <a class="navbar-brand" href="#"><div class="glyphicon glyphicon-wrench"></div> Search</a>
+	</div>
+
+	<!-- Collect the nav links, forms, and other content for toggling -->
+	<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+	  <ul class="nav navbar-nav">    
+		<li  ><a style="padding:10px; margin:5px;" class="btn btn-success" onclick="Enviar_Consuta();" href="#" id="btn_Send">Start</a></li>
+	  </ul>
+	 
+	</div><!-- /.navbar-collapse -->
+	</div><!-- /.container-fluid -->
+	</nav>
+
+	<!--body form display--->
+
+	<div class="well">
+		<table class="table-striped" style="width:100%;">
+			<tr>
+				<th>Library</th>
+				<td>
+						<select id="Informacion_Libreria" required placement="top" name="Informacion_Libreria" class="form-control"></select>
+				</td>
+			</tr>
+			<tr>
+				<th colspan="2">
+					Simple search:  <input type="radio" onchange="$('.Advanced').hide();$('.Simple').show();" checked value="Simple" name="Tipo_Busqueda">
+				    Advanced search: <input type="radio" onchange='$(".Advanced").show();$(".Simple").hide();' value="Advanced" name="Tipo_Busqueda"></th>
+			</tr>
+			<tr class="Simple">
+				<th>Missmatch</th>
+				<td><input type="text" number="true" value="0" id="Missmatch" style="width:50px;" name="Missmatch" class="form-control"></td>
+			</tr>
+			<tr class="Simple">
+				<th>Sequence</th>
+				<td><input type="text" id="Secuencia" name="Secuencia" class="form-control"></td>
+			</tr>
+			<tr class="Advanced" style="display:none;">
+				<th>Pattern</th>
+				<td><input type="text" id="Pattern" name="Pattern" class="form-control"></td>
+			</tr>
+		
+		
+		</table>
+		<table style="display:none;" class="table bordered Advanced">
+		<tr><th>Character</th><td>Mean</td></tr>
+		<tr><th>.</th><td>Matches any single character.</td></tr>
+		<tr><th>^</th><td>Strings that beginning with some simbol.</td></tr>
+		<tr><th>$</th><td>Strings that end with some simbol.</td></tr>
+		<tr><th>{n}</th><td>Repeat a character n times.</td></tr>
+		<tr><th>*</th><td>Matches zero or more instances</td></tr>
+		<tr><th colspan="2">Examples</th></tr>
+		<tr><th>^A</th><td>All sequences that start with A.</td></tr>
+		<tr><th>GC$</th><td>All sequences that end with GC.</td></tr>
+		<tr><th>TTT</th><td>All sequences that contain TTT.</td></tr>
+		<tr><th>^T{3}..ACG$</th><td>All sequences that start with TTT contain two wildcards and end with ACG.</td></tr>
+		</table>
+	</div>
+	
+	<!--/.body form --->
+    </form>  
+  
+  
+</body>
+</html>

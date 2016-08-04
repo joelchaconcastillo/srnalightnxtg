@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<!-- saved from url=(0017)http://osgjs.org/ -->
+<html lang="en" >
+   <head>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+   <!-- <link rel="shortcut icon" href="http://osgjs.org/assets/favicon.png">
+-->
+    <title>sRNA</title>
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <link href="./css/normalize.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="./css/screen.css">
+    <link href="./css/bootstrap-3.1.1-dist/css/bootstrap.min.css" rel="stylesheet">
+
+	
+<link rel="stylesheet" href="./css/jquery-ui.css">
+<script src="./js/jquery-1.9.1.min.js"></script>
+<script src="./Add_Plugins/Recursos.js" charset="UTF-8" type="text/javascript"></script>
+
+<script src="./js/jquery.balloon.js"></script>
+<script src="./js/jquery-ui.js"></script>
+<script src="./js/Controles.js"></script>
+<script src="./js/sonic.js"></script>
+<script src="./js/Send.js"></script>
+<script src="./js/jquery.balloon.js"></script>
+<script src="./js/jquery.validate.js" type="text/javascript"></script>
+<script src="./js/Validacion.js"></script>
+<script src="./js/Help.js"></script>
+<script src="./js/Ventana_Consultas.js"></script>
+<script src="./js/Autocompletar.js"></script>
+
+
+ <!--<link href="./Add_Plugins/Recursos.css" charset="UTF-8" rel="stylesheet">-->
+ <link href="./DataTables-1.10.2/media/css/jquery.dataTables.css" rel="stylesheet">
+		  <link href="./DataTables-1.10.2/media/css/dataTables.fixedColumns.css" rel="stylesheet">
+		  <link href="./DataTables-1.10.2/media/css/jquery.dataTables.css" rel="stylesheet">
+	     
+		  <script type="text/javascript" src="./DataTables-1.10.2/media/js/jquery.dataTables.js"></script>
+		  <script type="text/javascript" src="./DataTables-1.10.2/media/js/jquery.dataTables.min.js"></script>
+		  <script type="text/javascript" src="./DataTables-1.10.2/media/js/dataTables.fixedColumns.js"></script>
+
+
+
+
+<script type="text/javascript" src="./js/jsapi"></script>
+<script type="text/javascript">
+
+  google.load("visualization", "1", {packages:["corechart"]});
+ // google.setOnLoadCallback(UrlFile);
+  
+</script>
+<style>
+	th{
+		text-align:center;
+		vertical-align:center;
+	}
+</style>
+<script>
+$(document).ready(function(e) 
+{
+	
+	$.post("./PHP/Login_Server.php",{Origen:'Menu_Permisos'},
+	   function(Object)
+	   {
+		  if(Object.Activa)
+	      $("#Menu_Superior").load(Object.Script,function(){Informacion_Usuario();});	   
+	      else
+	      setTimeout("location.href='./HTML/Login.html'", 0); 
+	   },'json');
+	
+	$("#Menu_Procesos").load("./HTML/Menu_Experimentos.html");
+	Informacion_Usuario();
+});
+function Cerrar_Sesion()
+{
+        $.post("./PHP/Login_Server.php",{
+                Origen: "Logout"
+        },function () {
+                setTimeout("location.href='./HTML/Login.html'", 0);        
+		});
+}
+function Cargar_Logo()
+{
+   $("#Panel_Central").html('<img src="./Images/science8.png" alt="" class="logo">');
+}
+function Cambiar(url)
+{
+  //Drop_Baloons();
+  $("#Panel_Central").load(url, function(){$("#Panel_Central").fadeIn();});
+}
+function Brillar_Avisos_Procesos()
+{
+	//$("#btn_Procesos").animate({ boxShadow : "0px 0px 57px #ffffff" });
+	
+	/*$("#btn_Procesos").css(
+	{
+	   '-moz-box-shadow': '0px 0px 57px #ffffff',
+       '-webkit-box-shadow': '0px 0px 57px #ffffff',
+       'box-shadow': '0px 0px 57px #ffffff'
+	});*/
+	
+}
+function Informacion_Usuario()
+{
+	$.post("./PHP/Login_Server.php",{Origen: 'Informacion_Usuario'},function(JSON)
+	{
+		$("#Informacion_Usuario").append('<label">'+JSON.Cuenta+"</label>");
+	},'json');
+}
+
+</script>
+</head>
+<body data-spy="scroll" data-target=".navbar-collapse" style="padding:0px;">
+<div id="Menu_Superior"></div>
+
+<div id="Panel_Central" style="margin: 2%;">
+		<img src="./Images/science8.png" alt="" class="logo">			                             
+</div>
+<div id="Menu_Procesos" style="position:absolute;"></div>
+
+
+
+</body>
+</html>

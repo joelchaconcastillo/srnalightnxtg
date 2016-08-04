@@ -1,0 +1,179 @@
+<html>
+<head>
+<script src="js/Validacion.js"></script>
+<script src="js/Ventana_Consultas.js"></script>
+<script src="js/Help.js"></script>
+<style>
+.Content_Subir
+{
+	text-align:center;
+}
+</style>
+<script>
+$(document).ready(function()
+{
+	Listar_Librerias();
+	$(document).keyup(function(event)
+	{
+		if(event.keyCode==27)
+		$("#Contenedor_Directorio_Temporal").ScreenOff();
+	});
+  $.post("./PHP/Subir_Archivo_Server.php",
+	{
+           Origen:"Directorio"
+	},
+	function(data)
+	{
+ 	  $("#Directorio").html(data);
+	});
+
+ //Evento del folder temporal
+  $("#btn_Folder_Temporal").click(function()
+	{
+		  	$("#Contenedor_Directorio_Temporal").ScreenOn();			
+			$("#Contenedor_Directorio_Temporal").center();
+	}
+	);
+   $("#btn_Subir").click(function()
+  {
+         var file = $("#Archivo")[0].files[0]; 
+         var Form = new FormData($('#Form_Automatic')[0]); 
+         Form.append("fileUpload",file); 
+         Form.append("Origen","Subir_Archivo"); 
+  $.ajax({ 
+             xhr: function() { 
+             var xhr = new window.XMLHttpRequest(); 
+             xhr.upload.addEventListener("progress", function(evt) { 
+            if (evt.lengthComputable) { 
+             var percentComplete = Math.round(evt.loaded * 100 / evt.total); 
+              $("#Progreso_Numero").html(percentComplete.toString() + '%'); 
+              $("#Progreso").val(evt.loaded  / evt.total); 
+            } 
+       }, false); 
+       return xhr; 
+    }, 
+        url: './PHP/Subir_Archivo_Server.php', 
+        type: 'POST', 
+        data: Form, 
+        cache: false, 
+        dataType: 'json', 
+        processData: false, // Don't process the files 
+        contentType: false, // Set content type to false as jQuery will tell the server its a query string request 
+        success: function(Obj, textStatus, jqXHR) 
+        { 
+          $("#Directorio").html(Obj.Directorio);               
+          $("#Progreso_Numero").html("0%");
+          $("#Progreso").val(0);   
+	   var control = $("#Archivo");
+	  control.replaceWith(control=control.clone(true));  
+	if(Obj.Valido)
+	  //Esta función se encuentra en el script 
+	  Siguiente_Pipe();
+	  
+        }, 
+        error: function(jqXHR, textStatus, errorThrown) 
+        { 
+                console.log('ERRORS: ' + textStatus); 
+        } 
+      }); 
+   });
+});
+function Borrar_Archivo(Archivo)
+{
+	$.post("./PHP/Subir_Archivo_Server.php",{Origen: "Borrar_Archivo",Archivo: Archivo},
+		function(Obj)
+		{
+		   $("#Directorio").html(Obj.Directorio+"<br><div style='color:red'>Note: Only should be the correct files</div>");
+		},'json');
+}
+function Listar_Librerias()
+{
+	$.post("./PHP/Subir_Archivo_Server.php", {Origen:"Listar_Librerias"},
+	function(JSON)
+	{
+		for(i=0;i<JSON.length;i++)
+		$("#Select_Listar_Librerias").append('<option value="'+JSON[i].Id_Libreria+'" >'+JSON[i].Nombre+'</option>');
+	},'json');
+}
+function Mostrar_Archivos_Libreria(Element_DOM)
+{	
+	 $.post("./PHP/Subir_Archivo_Server.php",
+		  {
+			  Origen: "Abrir_Folder_Temporal",
+			  Id_Libreria: $(Element_DOM).val()
+		  },
+		  function(ObjHTML)
+		  {
+		      $("#Archivos_Directorio").html(ObjHTML);
+		      $("#Archivos_Directorio").css(
+		      {
+				"height": $("#Contenedor_Directorio_Temporal").height()/2,
+				"overflow-y": "auto"
+			  });
+		  });
+	
+}
+function Agregar_Archivo_Temporal(Archivo)
+{
+	$.post("./PHP/Subir_Archivo_Server.php",
+			{
+				Origen:"Utilizar_Temporal_Procesar_Archivo",
+				Archivo: Archivo
+			},
+		function(JSON)
+		{
+			$("#Directorio").html(JSON.Directorio);
+			$("#Contenedor_Directorio_Temporal").ScreenOff();
+		},'json');
+}
+</script>
+</head>
+<body>
+<div class="Content_Subir">
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#"><div class="glyphicon glyphicon-wrench"></div> Upload File</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+		<li><a style="padding:10px; width:50px; margin:5px;"  class="btn btn-primary glyphicon glyphicon-folder-open" id="btn_Folder_Temporal"></a></li>
+        <li><a style="padding:10px; margin:5px;" class="btn btn-success" href="#" id="btn_Subir">Start</a></li>
+      </ul>
+     
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+<label>Please select the file(s):</label><br><br>
+<input class="btn btn-primary" type="file" id="Archivo" style="margin:auto">
+<br>
+<progress id="Progreso"></progress>
+<br>
+<label id="Progreso_Numero"></label>
+<br>
+<br>
+<fieldset>
+<legend>Directory</legend>
+</fieldset>
+<div id="Directorio">
+</div>
+</div>
+		<div style="background:white; width:400px; height:50%; display:none;" id="Contenedor_Directorio_Temporal">
+			<div style="float:right; cursor:pointer;" class="glyphicon glyphicon-remove-sign" onclick='$("#Contenedor_Directorio_Temporal").ScreenOff();' ></div>
+			<div class="panel panel-primary" style="dispĺay:none; width:100%; height:100%;">
+			<div class="panel-heading"><label>Select file</label></div>
+			<div class="panel-body">
+				<label>Please select the library</label>
+				 <select id="Select_Listar_Librerias" class="form-control" onchange="Mostrar_Archivos_Libreria(this)" >
+				  <option selected disabled>Please select the library</option>
+				 </select> 	
+				 <div id="Archivos_Directorio" ></div> 
+			 </div>
+			 </div>
+		 </div>
+		</div>
+</body>
+</html>

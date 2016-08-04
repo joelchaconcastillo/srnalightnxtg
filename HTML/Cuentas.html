@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head> 
+<style>
+#NewForm tr
+{
+	height:60px;
+}
+</style>
+<script>
+$("#Register").click(function()
+{
+	 if($("#NewForm").valid())
+	 {
+		 $.post("./PHP/New_Server.php",
+			{
+			   Origen: "Insert",
+			   User: $("#User").val(),
+			   Pass: $("#Pass").val(),
+			   Permission: $("#Permission").val(),
+			   Name: $("#Name").val(),
+			   LastName: $("#LastName").val(),
+			   Email: $("#email").val(),
+			},
+			function(data,status)
+			{
+				Limpiar_Campos();
+				$("#Report").text(data);
+				Consult();
+			}
+			);
+	 }
+});
+$( "#NewForm").validate({
+  rules: {
+    User: {
+		required: true,
+		minlength: 2
+	},
+	Pass:{
+		required: true,
+		minlength: 6
+	},
+	confirm_password: {
+				required: true,
+				minlength: 6,
+				equalTo: "#Pass"
+			},
+	Name: "required",
+	LastName: "required",
+	email: {
+		required: true,
+		email: true
+	},
+  },
+	 showErrors: function(errorMap, errorList) 
+				{
+			 
+						$.each(this.successList, function(index, value) 
+						{
+							return $(value).popover("hide");
+						});
+						
+						return $.each(errorList, function(index, value) 
+							{
+								var _popover;
+								console.log(value.message);
+								_popover = $(value.element).popover(
+												{
+													trigger: "manual",
+													placement: "right",
+													content: value.message,
+													template: "<div class=\"popover\"><div class=\"arrow\"></div><div class=\"popover-inner\"><div class=\"popover-content\"><p></p></div></div></div>"
+												});
+												$(value.element).attr("data-content",value.message);
+								return $(value.element).popover("show");
+							});
+				}
+		});
+</script>
+<script>
+$(document).ready(function(e) {
+	
+	$("#New").click(
+	function()
+	{
+		
+		if($("#Add").css("display")=="none")
+		{
+		   $("#Add").fadeIn(1000);
+		   $("#NUpdate").fadeOut(0);	
+		}
+		
+		
+	}
+	);
+	$("#Update").click(
+	function()
+	{
+		if($("#NUpdate").css("display")=="none")
+		{
+		   $("#NUpdate").fadeIn(1000);
+		   $("#Add").fadeOut(0);	
+		}
+	}
+	);
+	
+});
+$(document).ready(function(e) {
+	Consult();	 
+	 $("#Modal_Altas_Cuentas").on('hidden.bs.modal', function () {
+			Limpiar_Campos();
+		});  
+   $("#select").keyup(Consult);
+});
+function Consult()
+{
+	$.post("./PHP/New_Server.php",
+	   {
+		   Key: $("#select").val(),
+		   Origen: "Select"
+		   
+	   },
+	   function(data)
+	   {
+						 $("#Content_Table").html(data).promise().done(function()
+						 {
+							  var table = $('#Tabla_Cuentas').dataTable(
+										{  
+										  "order": [[ 0, "desc" ]],
+										/*"columnDefs": [
+												{ "width": "50", "targets": "1" }
+											  ],
+											 scrollY:        "300px",
+											*/	// scrollX:        true,
+											 scrollCollapse: true,
+											"pagingType": "full_numbers",
+											"autoWidth": false,
+											dom: 'T<"clear">lfrtip'	
+										} 
+									   );
+									      $("th").css('text-align','center');
+									   $("th").css('vertical-align','middle');
+									   $("td").css('text-align','center');
+									   $("td").css('vertical-align','middle');
+									 
+																				});
+		
+	   });
+}
+function DeleteA(Elemento)
+{
+	if(confirm("Do you want delete this account?"))
+	{
+		$.post("./PHP/New_Server.php",
+				{
+				   Id_Cuenta: $(Elemento).attr('Id_Cuenta'),
+				   Origen: "Delete"
+				},
+				function(data)
+				{
+					Consult();
+				}
+				);
+	}
+}
+function UpdateT(row,column)
+{
+	
+var text= $("#"+row+column).text();
+if(!$("#T"+row+column).length)
+	{
+			
+if(column=="Tipo_Cuenta")
+{
+	$("#"+row+column).html('<select class="form-control" id="T'+row+column+'" onChange="UpdateField(\''+row+'\',\''+column+'\',event,this,\'Administrator\')" Autofocus > <option value="" disabled="disabled" id="dropdown" selected="selected">Please Select</option><option value="Administrator">Administrator</option><option value="User">User</option>');
+}
+else if(column=="Confirmacion")
+{
+	
+	$("#"+row+column).html('<select class="form-control" id="T'+row+column+'" onChange="UpdateField(\''+row+'\',\''+column+'\',event,this,\'Administrator\')" Autofocus > <option value="" disabled="disabled" id="dropdown" selected="selected">Please Select</option><option value="1">Yes</option><option value="0">No</option>');
+}
+else
+{
+	$("#"+row+column).html('<input type="text" style="display:inline-block; width:150px;" class="form-control" id="T'+row+column+'" onKeyUp="UpdateField(\''+row+'\',\''+column+'\',event,this,\'User\')" Autofocus size="8"> <input type="button" value="Save" class="btn btn-success" onclick="Actualizar_Campo(\''+row+'\',\''+column+'\',event,this,\'User\')"><input type="button" value="Cancel" class="btn btn-danger" onclick="Consult()">');
+	$("#T"+row+column).val(text);
+	
+}
+	}
+
+}
+function UpdateField(row,column,key,element,Permission)
+{
+		var band=false;
+	if(Permission=="Administrator")
+	{
+		band=true;
+	}
+	else if(Permission=="User")
+	{
+		var unicode
+		if (key.charCode)
+		{unicode=key.charCode;}
+		else
+		{unicode=key.keyCode;}
+		
+		 if (unicode == 13 && element.value.length>1)
+		 {
+			 band=true;
+		 }
+	}
+	 if(band)
+	 {
+        	$.post("./PHP/New_Server.php",
+			{
+			   Data:element.value,
+			   Row: row,
+			   Column: column,
+			   Origen: "Update",
+			},
+			function(data,status)
+			{
+				Consult();
+				
+			}
+			);
+     }
+}
+function Actualizar_Campo(row,column,key,element,Permission)
+{
+	$.post("./PHP/New_Server.php",
+			{
+			   Data:$(element).parent().find(':text').val(),
+			   Row: row,
+			   Column: column,
+			   Origen: "Update",
+			},
+			function(data,status)
+			{
+				Consult();
+				
+			});
+}
+function Limpiar_Campos()
+{	
+		$("#PassC").val("");
+		$("#User").val("");
+		$("#Pass").val("");
+		$("#Name").val("");
+		$("#LastName").val("");
+		$("#email").val("");
+}
+</script>
+</head>
+<body>	
+<div id="Contenido">
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#"><div class="glyphicon glyphicon-wrench"></div> Account configuration ( please select the field to edit )</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+		 <!--<li><a>Make graphics <input type="checkbox" id="Make_Gph" name="Make_Gph"></a></li>-->
+				<li  ><a style="padding:10px; margin:5px;" class="btn btn-info"  data-toggle="modal" data-target="#Modal_Altas_Cuentas">New Account</a></li>
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+<!--Tabla Cuentas-->
+<div id="Content_Table" ></div>
+
+<!-- Modal -->
+<div class="modal fade" id="Modal_Altas_Cuentas" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">Add a new user</h4>
+      </div>
+      <div class="modal-body">
+
+				<div id="Add" >
+				<form id="NewForm">
+					<div class="form-inline">
+						<table style="margin:auto;">
+							<tr>
+								<td>
+									<label class="form-label">Username:</label>
+								</td>
+								<td>	
+									<input type="text" class="form-control" id="User" name="User"/><br />
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<label class="form-label">Pass:</label>
+								</td>
+								<td>
+									<input type="password" class="form-control" id="Pass" name="Pass" /><br />
+								</td>
+							</tr>	
+							<tr>
+								<td>
+									<label class="form-label">Confirm Pass:</label>
+								</td>
+								<td>
+									<input type="password" class="form-control" id="PassC" name="confirm_password" /><br />
+								</td>
+							</tr>	
+							<tr>
+								<td>
+									<label class="form-label">Permission:</label>
+								</td>
+								<td>	
+									<select class="form-control" id="Permission" >
+									<option value="User" select> User </option>
+									<option value="Administrator" > Administrator </option>
+									
+									</select>
+								</td>
+							</tr>	
+							<tr>
+								<td>
+									<label class="form-label">Name(s):</label>
+								</td>
+								<td>	
+									<input type="text" class="form-control" name="Name" id="Name" /><br />
+								</td>
+							</tr>
+							<tr>	
+								<td>
+									<label class="form-label">Last Names:</label>
+								</td>
+								<td>
+									<input type="text" class="form-control" name="LastName" id="LastName" /><br />
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<label class="form-label">e-mail:</label>
+								</td>
+								<td>
+									<input type="text" class="form-control" name="email" id="email" /><br />
+								</td>
+							</tr>
+							
+						</table>
+					</div>	
+				</form>
+				</div>
+					
+
+ </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary"  id="Register" >Register</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+		
+

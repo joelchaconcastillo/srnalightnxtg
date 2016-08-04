@@ -1,0 +1,219 @@
+<html>
+<body>
+
+<script src="js/Validacion.js"></script>
+<script src="js/Help.js"></script>
+<script src="js/Autocompletar.js"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<style>
+</style>
+<script>
+$(document).ready(function(e) {
+	Validar_Formulario('Content_Bowtie');
+	$.post("./PHP/Bowtie.php",{Origen:"Genomas"},function(data)
+	{
+		$("#Genoma").html(data);
+	});
+   $("#Flecha").click(function()
+   {
+	   if($("#Content_Bowtie").valid())
+	   {
+		   var Formulario= $("#Content_Bowtie").serializeArray();
+		   
+		   Formulario.push({name:'Origen', value:'Ejecutar'});
+		   Formulario.push({name:'URL', value: document.URL});
+		  $.post("./PHP/Bowtie.php",Formulario,function(data){Cargar_Logo();});
+	  }
+   });
+});
+function Toggle_Bowtie()
+{
+	$("#Interface").slideToggle();
+	$("#Console").slideToggle();
+	$("#TerminalBowtie").val("bowtie");
+	if($("#btn_toggle_bowtie").val()=="Use Interface")
+	{	
+		$("#btn_toggle_bowtie").val("Use Console");
+	}
+	else
+	{
+		$("#btn_toggle_bowtie").val("Use Interface");
+	}
+}
+function Check(id)
+{
+if($("#"+id).attr('disabled'))
+	{
+		$("#"+id).removeAttr('disabled');
+	}else
+	{
+		$("#"+id).attr('disabled','disabled');
+		$("#"+id).val("");
+	}
+		
+}	
+</script>
+<form id="Content_Bowtie">
+	
+	<nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#"><div class="glyphicon glyphicon-wrench"></div> Bowtie</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+		<li><a>Notify by email <input type="checkbox" id="Email" name="Email"></a></li>
+        <li  ><a style="padding:10px; margin:5px;" class="btn btn-success" href="#" id="Flecha">Start</a></li>
+</li>
+      </ul>
+     
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>	
+	<legend>Bowtie configuration</legend>
+	<label>Genome:</label>
+	<br>
+		<select name="Select_Genoma" id="Genoma" style="width:400px; margin:auto;" class="form-control" required>
+		 <option value="" disabled="disabled" id="dropdown"  selected="selected">Please select a Genome</option>
+		</select>
+		<br>
+		<input type="button" value="Use console" class="btn btn-primary" id="btn_toggle_bowtie" onClick="Toggle_Bowtie()">
+	<fieldset id="Interface">
+	<legend>Interface</legend>
+		<table id="Alignment" class="table table-striped active" style="display:inline-block; vertical-align:top; margin-right:100px; width:auto;" > 
+			<tr>
+				<th colspan="3">Aligment</th>
+			</tr>
+			<tr>
+				<td>
+					<input type="radio" name="Tipo_Alineacion"  value="-v" checked>
+				</td>
+				<td>
+					<label>Report alignment with mismatches (-v)</label>
+				</td>
+				<td style="vertical-align:middle;" rowspan="2">
+					<input type="text" class="form-control" style="width:50px; margin:auto;" value="2" name="Alineacion_n" id="n_text">
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<input type="radio" name="Tipo_Alineacion"  value="-n">
+				</td>
+				<td>
+					<label>Maximum number of mismatches permitted in the seed (-n)</label>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td>
+					<label>The seed length (-l)</label>
+				</td>
+				<td>
+					<input type="text" class="form-control" style="width:50px;" name="Opcion_l" id="l_text"  id="Longitud_Semilla">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td>
+					<label>Maximum permitted total of quality <br>values at all mistmatches read positions (-e)</label>
+				</td>
+				<td>
+					<input type="text" class="form-control" style="width:50px;" name="Opcion_e" id="e_text" name="e_text" >
+
+				</td>
+			</tr>
+		</table>
+		<table id="Alignment" class="table table-striped active" style="display:inline-block; vertical-align:top; width:auto;" > 
+		<tr>
+			<th>Reporting</th>
+		</tr>
+		<tr>
+			<td>
+				<label>Report all valid alignments per read or pair (-a)</label>
+			</td>
+			<td>
+				<input type="radio" value="-a" checked="checked" onChange="Check('k_text')" name="Tipo_Reporte" />
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<label>Valid alignments per read or paid (-k)</label>
+			</td>
+			<td>
+				<input type="radio" value="-k" id="K" onChange="Check('k_text')"  name="Tipo_Reporte" />
+			</td>
+			<td>
+				<input type="text" name="Opcion_k"  id="k_text" disabled="false" class="form-control" style="width:50px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<label>Output no alignments if the report have more alignments than (-m) </label>
+			</td>
+			<td>
+				<input type="text" name="Opcion_m" id="m_text" name="m_text" class="form-control" style="width:50px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<label>Report one at random if the report have more alignments than (-M) </label>
+			</td>
+			<td>
+				<input type="text" name="Opcion_M" id="ML_text" name="ML_text" class="form-control" style="width:50px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<label>Report the alignment in order "best-to-worse"(--best)</label>
+			</td>
+			<td>
+				<input type="checkbox" value="--best" id="best_check" name="Check_best"/>
+			</td>
+		</tr>
+		<tr>
+			<td>
+<label>Report only those alignments that fall into the best stratum
+		(--strata )</label>
+			</td>
+			<td>
+				<input type="checkbox" value="--strata" id="strata_check" name="Check_strata">
+			</td>
+		</tr>
+		</table>
+	</fieldset>
+		<table id="Console" class="table table-striped active" style="display:none; vertical-align:top; margin:auto; width:auto;" > 
+			<tr>
+				<th colspan="2">Console</th>
+			</tr>
+			<tr>
+				<td colspan="2">
+					Remember doesn't write the path of the end..
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Example:
+				</td>
+				<td>
+					"	bowtie -a -n 2 --best"
+				</td>			
+			</tr>
+			<tr >
+				<th colspan="2">
+					With commands:
+				</th>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<textarea class="form-control" cols="80" rows="5" name="TerminalBowtie" id="TerminalBowtie">bowtie</textarea>
+				</td>
+			</tr>
+			
+		</table>
+	
+</form>
+</body>
+</html>

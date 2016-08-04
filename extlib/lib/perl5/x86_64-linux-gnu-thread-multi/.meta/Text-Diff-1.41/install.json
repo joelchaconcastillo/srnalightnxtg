@@ -1,0 +1,1 @@
+{"provides":{"Text::Diff::Base":{"file":"Text/Diff.pm"},"Text::Diff::Table":{"file":"Text/Diff/Table.pm","version":"1.41"},"Text::Diff":{"file":"Text/Diff.pm","version":"1.41"},"Text::Diff::Config":{"file":"Text/Diff/Config.pm","version":"1.41"}},"name":"Text::Diff","dist":"Text-Diff-1.41","pathname":"O/OV/OVID/Text-Diff-1.41.tar.gz","module":"Text::Diff","version":"1.41"}
