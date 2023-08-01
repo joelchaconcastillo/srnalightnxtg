@@ -66,8 +66,11 @@ function Verificar_Usuario()
 	$Conexion=Abrir_Conexion();
 	$Script="#";
 	$Aceptado=0;
-	$Resultado=mysql_query("SELECT COUNT(*) FROM Cuenta where Cuenta = '$Usuario' AND Pass = '$Pass'",$Conexion);
-	$row=mysql_fetch_array($Resultado);
+#	$Resultado=mysql_query("SELECT COUNT(*) FROM Cuenta where Cuenta = '$Usuario' AND Pass = '$Pass'",$Conexion);
+	$Resultado=mysqli_query($Conexion, "SELECT COUNT(*) FROM Cuenta where Cuenta = '$Usuario' AND Pass = '$Pass'");
+
+	#$row=mysql_fetch_array($Resultado);
+	$row=mysqli_fetch_array($Resultado);
 		if($row[0]==1)
 		{
 			$row=Verificacion_Correo($Usuario, $Pass, $Conexion);
@@ -100,8 +103,9 @@ function Verificar_Usuario()
 }
 function Verificacion_Correo($Usuario, $Pass, $Conexion)
 {
-	$Resultado=mysql_query("SELECT * FROM Cuenta where Cuenta = '$Usuario' AND Pass = '$Pass'",$Conexion);
-	$row=mysql_fetch_assoc($Resultado);
+	#$Resultado=mysql_query("SELECT * FROM Cuenta where Cuenta = '$Usuario' AND Pass = '$Pass'",$Conexion);
+	$Resultado=mysqli_query($Conexion, "SELECT * FROM Cuenta where Cuenta = '$Usuario' AND Pass = '$Pass'");
+	$row=mysqli_fetch_assoc($Resultado);
 	return $row;
 }
 function Listar_Usuarios()
@@ -120,8 +124,8 @@ Cerrar_Conexion($conexion);
 function Correo_Recuperacion()
 {
 		$Conexion=Abrir_Conexion();
-        $Resultado = mysql_query("SELECT * FROM Cuenta WHERE Email = '".$_POST['Email']."'",$conexion);
-	    $row =mysql_fetch_assoc($Resultado);
+        $Resultado = mysqli_query($Conexion, "SELECT * FROM Cuenta WHERE Email = '".$_POST['Email']."'");
+	    $row =mysqli_fetch_assoc($Resultado);
         $usuario=$row['Cuenta'];
         $pass=$row['Pass'];
         JBrowse_data($Conexion,$usuario);

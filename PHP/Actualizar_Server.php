@@ -11,7 +11,9 @@ function Consulta()
 	session_start();
 	$Conexion=Abrir_Conexion();
 	$Resultado=mysql_query("select * from Cuentas where Id_Cuentas = ".$_SESSION['Id_Cuenta'],$Conexion);
+	#$Resultado=mysqli_query($Conexion, "select * from Cuentas where Id_Cuentas = ".$_SESSION['Id_Cuenta']);
 	$Consulta=mysql_fetch_assoc($Resultado);
+#	$Consulta=mysqli_fetch_assoc($Resultado);
 	$Nombre="Name: ".$Consulta['Nombre']."<br>";
 	$Last_Names="Last Name: ".$Consulta['Apellidos']."<br>";
 	$Email="Email: ".$Consulta['Email']."<br>";

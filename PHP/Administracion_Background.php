@@ -11,9 +11,11 @@ function Procesar_Comandos($Id_HTOP)
 	Limpiar_Directorio();
 	$Conexion=Abrir_Conexion();
 	mysql_query("UPDATE HTOP SET Activo = 1 WHERE Id_HTOP = $Id_HTOP",$Conexion);
+	#mysqli_query($Conexion, "UPDATE HTOP SET Activo = 1 WHERE Id_HTOP = $Id_HTOP");
 	$Query="SELECT P.*, L.*, Li.*, H.* FROM Libreria Li inner join HTOP H on Li.Id_Libreria = H.Id_Libreria inner join PIPE P on P.Id_HTOP = H.Id_HTOP inner join Lista_Comandos L on L.Id_PIPE = P.Id_PIPE";
 	$Query.=" WHERE H.Id_HTOP = $Id_HTOP";
 	$Resultado=mysql_query($Query, $Conexion);
+	#$Resultado=mysqli_query($Conexion, $Query);
 	Cerrar_Conexion($Conexion);
 	
 	while($row=mysql_fetch_assoc($Resultado))
@@ -33,6 +35,7 @@ function Procesar_Comandos($Id_HTOP)
 				$File = addslashes($File);
 				$Conexion = Abrir_Conexion();	
 				mysql_query("UPDATE PIPE SET Stdout = '$File' WHERE Id_PIPE =".$row['Id_PIPE'], $Conexion);
+				#mysqli_query($Conexion, "UPDATE PIPE SET Stdout = '$File' WHERE Id_PIPE =".$row['Id_PIPE']);
 				Cerrar_Conexion($Conexion);
 			}
 		}
@@ -42,8 +45,10 @@ function Procesar_Comandos($Id_HTOP)
 	$Conexion=Abrir_Conexion();
 	//Borra la lista de comandos
 	mysql_query("DELETE L.* FROM HTOP H inner join PIPE P on P.Id_HTOP = H.Id_HTOP inner join Lista_Comandos L on L.Id_PIPE = P.Id_PIPE WHERE H.Id_HTOP =  ".$Id_HTOP, $Conexion);
+	#mysqli_query($Conexion, "DELETE L.* FROM HTOP H inner join PIPE P on P.Id_HTOP = H.Id_HTOP inner join Lista_Comandos L on L.Id_PIPE = P.Id_PIPE WHERE H.Id_HTOP =  ".$Id_HTOP);
 	//Actualizar reporte archivo
 	mysql_query("UPDATE HTOP SET Activo = 0, Mostrar_Reporte = 1, Ventana_Abierta = 1, Visto = 1 WHERE Id_HTOP = $Id_HTOP",$Conexion);
+	#mysqli_query($Conexion, "UPDATE HTOP SET Activo = 0, Mostrar_Reporte = 1, Ventana_Abierta = 1, Visto = 1 WHERE Id_HTOP = $Id_HTOP");
 	Cerrar_Conexion($Conexion);	
 	
 	if($Mostrar_Graficos =="1")
@@ -62,6 +67,7 @@ function Limpiar_Directorio()
 	
 	$Conexion = Abrir_Conexion();
 	$Reusltado = mysql_query("SELECT L.* FROM HTOP H inner join Libreria L on L.Id_Libreria = H.Id_Libreria WHERE Id_HTOP = $Id_HTOP", $Conexion);
+	#$Reusltado = mysqli_query($Conexion, "SELECT L.* FROM HTOP H inner join Libreria L on L.Id_Libreria = H.Id_Libreria WHERE Id_HTOP = $Id_HTOP");
 	$row = mysql_fetch_assoc($Resultado);
 	Cerrar_Conexion($Conexion);
 	 foreach( glob($row['Ruta']."/{*}",GLOB_BRACE) as $Elemento )
@@ -97,6 +103,7 @@ function Ejecucion_Proceso($Id_HTOP, $PID)
 {
    $Conexion=Abrir_Conexion();
    mysql_query("update HTOP set Activo = 1, PID = $PID where Id_HTOP = $Id_HTOP",$Conexion);
+   #mysqli_query($Conexion, "update HTOP set Activo = 1, PID = $PID where Id_HTOP = $Id_HTOP");
    Cerrar_Conexion($Conexion);
 }
 function Analisis_Datos($Ruta_Archivo, $Ruta_Relativa)

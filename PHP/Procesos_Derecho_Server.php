@@ -1,5 +1,6 @@
 <?php 
-include("Administrar_Librerias.php");
+
+include("MySQL.php");
 switch($_REQUEST['Origen'])
 {
    case "Finalizar_Procesos":
@@ -67,7 +68,9 @@ function Revisar_Cambios()
 		$Select .=" WHERE C.Id_Cuenta = $Id_Cuenta AND Visto = 1  ";
 		$Resultado = @mysql_query($Select, $Conexion);
 		$Numero_Elementos = mysql_fetch_array($Resultado);// @mysql_num_rows($Resultado);
-		echo json_encode(array("Numero_Procesos_Listos" => $Numero_Elementos[0]));
+		if($Numero_Elementos){
+			echo json_encode(array("Numero_Procesos_Listos" => $Numero_Elementos[0]));
+		}
 		
 }
 function Reiniciar_PIPE()

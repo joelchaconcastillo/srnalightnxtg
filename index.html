@@ -264,6 +264,7 @@ $(document).ready(function(e)
 	$.post("./PHP/Login_Server.php",{Origen:'Menu_Permisos'},
 	   function(Object)
 	   {
+		   alert(Object.Activa);
 		  if(Object.Activa)
 		  {
 			$("#Header").load(Object.Script,function(){Informacion_Usuario();});	   
